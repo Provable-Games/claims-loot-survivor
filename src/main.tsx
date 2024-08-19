@@ -1,7 +1,7 @@
-import React, { StrictMode } from "react";
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { StarknetProvider } from "./provider";
-import { Network } from "./hooks/useUIStore";
+import { Network } from "./lib/types";
 import App from "./App.tsx";
 import "./index.css";
 

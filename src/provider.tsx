@@ -8,7 +8,7 @@ import {
 import { mainnet, sepolia } from "@starknet-react/chains";
 import { Chain } from "@starknet-react/chains";
 import { networkConfig } from "./lib/networkConfig";
-import { Network } from "./hooks/useUIStore";
+import { Network } from "./lib/types";
 import { useInjectedConnectors } from "@starknet-react/core";
 import { cartridgeConnector } from "./lib/connectors";
 
@@ -34,7 +34,6 @@ export function StarknetProvider({
 
   return (
     <StarknetConfig
-      autoConnect
       chains={chains}
       connectors={[
         ...connectors,
