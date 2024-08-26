@@ -13,6 +13,7 @@ const Claiming = () => {
     "Consulting the RNG gods",
     "Unleashing chaos",
     "Preparing for epic ragequits",
+    "WARNING: Loot Survivor has no chill",
   ];
 
   useEffect(() => {

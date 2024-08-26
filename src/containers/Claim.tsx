@@ -1,64 +1,92 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Button } from "../components/Button";
 import { useUiSounds, soundSelector } from "../hooks/useUISound";
 import { useAccount, useConnect, useDisconnect } from "@starknet-react/core";
 import { getWalletConnectors } from "../lib/connectors";
 import { CartridgeIcon, CompleteIcon } from "../components/Icons";
-import { COLLECTIONS_MAP } from "../lib/constants";
-import { displayAddress } from "../lib/utils";
+import { collectionsData } from "../lib/constants";
+import { displayAddress, padAddress } from "../lib/utils";
 import useSyscalls from "../hooks/useSyscalls";
 import { useUIStore } from "../hooks/useUIStore";
-// import { networkConfig } from "../lib/networkConfig";
-// import { Network } from "../lib/types";
+import { Network } from "../lib/types";
+import { networkConfig } from "../lib/networkConfig";
 
 const Claim = () => {
-  const [delegateAccount, setDelegateAccount] = useState("");
+  // const [delegateAccount, setDelegateAccount] = useState("");
   const { play: clickPlay } = useUiSounds(soundSelector.click);
-  const { setClaiming } = useUIStore();
+  const { setClaiming, setClaimed, claimedData } = useUIStore();
 
-  const { connectors, connect, connector } = useConnect();
+  const { connectors, connect } = useConnect();
   const { disconnect } = useDisconnect();
   const { account, address } = useAccount();
-  // const network: Network = import.meta.env.VITE_NETWORK;
-  const { executeSetDelegate } = useSyscalls();
+  const network: Network = import.meta.env.VITE_NETWORK;
+  const { executeClaim } = useSyscalls();
 
   const walletConnectors = getWalletConnectors(connectors);
 
-  const unclaimedCollectionsByOwnerData = [
-    {
-      token: "0x1",
-      tokenId: 1,
-      claimed: false,
-    },
-    {
-      token: "0x1",
-      tokenId: 2,
-      claimed: false,
-    },
-    {
-      token: "0x2",
-      tokenId: 1,
-      claimed: false,
-    },
-    {
-      token: "0x5",
-      tokenId: 2,
-      claimed: false,
-    },
-  ];
+  const freeGamesAvailable = claimedData.filter(
+    (token: any) => !token.freeGameUsed
+  );
 
-  const getCollectionFreeGames = (token: string) => {
-    return unclaimedCollectionsByOwnerData.filter(
-      (item) => item.token === token
+  useEffect(() => {
+    if (account && freeGamesAvailable.length === 0) {
+      setClaimed(true);
+    }
+  }, [freeGamesAvailable]);
+
+  const handleCartridgeOnboarding = async () => {
+    // clickPlay();
+    // setDelegateAccount(address!);
+    // const cartridgeConnector = connectors.find(
+    //   (connector) => connector.id === "cartridge"
+    // );
+    // if (cartridgeConnector) {
+    //   connect({ connector: cartridgeConnector });
+    // }
+    executeClaimProcess();
+  };
+
+  const executeClaimProcess = async () => {
+    try {
+      // await executeSetDelegate(delegateAccount);
+      await executeClaim(
+        networkConfig[network!].gameAddress,
+        freeGamesAvailable
+      );
+      setClaiming(true);
+    } catch (error) {
+      setClaiming(false);
+      console.log(error);
+    }
+  };
+
+  // useEffect(() => {
+  //   if (connector?.id === "cartridge" && account) {
+  //     const timer = setTimeout(() => {
+  //       executeClaimProcess();
+  //     }, 2000); // Wait for 2 seconds (adjust as needed)
+
+  //     return () => clearTimeout(timer); // Clean up the timer
+  //   }
+  // }, [delegateAccount, connector, account]);
+
+  const getCollectionFreeGames = (tokens: string[]) => {
+    return freeGamesAvailable.filter((item: any) =>
+      tokens.includes(padAddress(item.token))
     );
   };
 
-  const renderCollection = (token: string, image: string, alt: string) => {
-    const freeGames = getCollectionFreeGames(token);
+  const renderCollection = (
+    tokens: string[],
+    image: string,
+    alt: string,
+    index: number
+  ) => {
+    const freeGames = getCollectionFreeGames(tokens);
     return (
       <div
         className="flex flex-col gap-2 items-center justify-center relative"
-        key={token}
+        key={index}
       >
         {address && (
           <>
@@ -71,7 +99,11 @@ const Claim = () => {
           </>
         )}
         <span className="relative h-20 w-20 border border-terminal-green">
-          <img src={image} alt={alt} className="w-full h-full" />
+          <img
+            src={"/collections/" + image}
+            alt={alt}
+            className="w-full h-full"
+          />
         </span>
         {address && freeGames.length > 0 && (
           <span className="w-full absolute top-24 flex flex-row bg-terminal-green text-terminal-black rounded-lg justify-center uppercase">
@@ -84,66 +116,7 @@ const Claim = () => {
     );
   };
 
-  const handleCartridgeOnboarding = () => {
-    clickPlay();
-    setDelegateAccount(address!);
-    const cartridgeConnector = connectors.find(
-      (connector) => connector.id === "cartridge"
-    );
-    if (cartridgeConnector) {
-      connect({ connector: cartridgeConnector });
-    }
-  };
-
-  useEffect(() => {
-    if (connector?.id === "cartridge") {
-      try {
-        executeSetDelegate(delegateAccount);
-        // executeClaim(networkConfig[network!].gameAddress, 1);
-        setClaiming(true);
-      } catch (error) {
-        console.log(error);
-      }
-    }
-  }, [delegateAccount, connector, account]);
-
-  const collectionsData = [
-    {
-      token: COLLECTIONS_MAP["Duck"],
-      alt: "Duck",
-      image: "/Duck.png",
-    },
-    {
-      token: COLLECTIONS_MAP["Blobert"],
-      alt: "Blobert",
-      image: "/Blobert.png",
-    },
-    {
-      token: COLLECTIONS_MAP["Everai"],
-      alt: "Everai",
-      image: "/Everai.png",
-    },
-    {
-      token: COLLECTIONS_MAP["Pixel Banners"],
-      alt: "Pixel Banners",
-      image: "/Pixel-Banners.png",
-    },
-    {
-      token: COLLECTIONS_MAP["StarkID"],
-      alt: "StarkID",
-      image: "/StarkID.png",
-    },
-    {
-      token: COLLECTIONS_MAP["Realms"],
-      alt: "Realms",
-      image: "/Realms.png",
-    },
-    {
-      token: COLLECTIONS_MAP["Open Division"],
-      alt: "Open Division",
-      image: "/Open-Division.png",
-    },
-  ];
+  console.log(claimedData);
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center bg-terminal-black sm:pt-8 sm:p-8 lg:p-10 2xl:p-20">
@@ -174,11 +147,12 @@ const Claim = () => {
             )}
           </div>
           <div className="grid grid-cols-4 gap-2 gap-y-14 sm:flex sm:flex-row sm:items-center sm:gap-5 h-[200px] sm:h-[100px]">
-            {collectionsData.map((collection) =>
+            {collectionsData.map((collection, index) =>
               renderCollection(
-                collection.token,
+                collection.tokens,
                 collection.image,
-                collection.alt
+                collection.alt,
+                index
               )
             )}
           </div>
@@ -208,7 +182,7 @@ const Claim = () => {
             ) : (
               <div className="flex flex-col gap-5">
                 <p className="text-2xl text-center uppercase">
-                  {unclaimedCollectionsByOwnerData.length} Free Games Claimable
+                  {freeGamesAvailable.length} Free Games Claimable
                 </p>
                 <Button
                   size={"lg"}

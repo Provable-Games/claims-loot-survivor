@@ -1,12 +1,24 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "./Button";
+import useSyscalls from "../hooks/useSyscalls";
+import { networkConfig } from "../lib/networkConfig";
+import { AdventurerMetadata, Network } from "../lib/types";
+import { fetchAdventurerMetadata } from "../api/fetchMetadata";
+import { statsRevealed } from "../lib/utils";
 
 export interface AdventurerCardProps {
   meta: any;
+  adventurerId: number;
 }
 
-const AdventurerCard = ({ meta }: AdventurerCardProps) => {
+const AdventurerCard = ({ meta, adventurerId }: AdventurerCardProps) => {
   const [isRevealing, setIsRevealing] = useState(false);
+  const [newMetadata, setNewMetadata] = useState<AdventurerMetadata | null>(
+    null
+  );
+
+  const formatMetadata = newMetadata ? newMetadata : meta;
+
   const [revealedStats, setRevealedStats] = useState({
     str: "?",
     dex: "?",
@@ -15,18 +27,11 @@ const AdventurerCard = ({ meta }: AdventurerCardProps) => {
     wis: "?",
     cha: "?",
   });
+  const { executeReveal } = useSyscalls();
+  const network: Network = import.meta.env.VITE_NETWORK;
+  const gameAddress = networkConfig[network!].gameAddress;
 
-  const statValues: Record<string, string> = {
-    str: meta.attributes.find((attr: any) => attr.trait === "Strength").value,
-    dex: meta.attributes.find((attr: any) => attr.trait === "Dexterity").value,
-    int: meta.attributes.find((attr: any) => attr.trait === "Intelligence")
-      .value,
-    vit: meta.attributes.find((attr: any) => attr.trait === "Vitality").value,
-    wis: meta.attributes.find((attr: any) => attr.trait === "Wisdom").value,
-    cha: meta.attributes.find((attr: any) => attr.trait === "Charisma").value,
-  };
-
-  const revealStats = () => {
+  const revealStats = async () => {
     setIsRevealing(true);
     const stats = ["str", "dex", "int", "vit", "wis", "cha"];
 
@@ -38,13 +43,73 @@ const AdventurerCard = ({ meta }: AdventurerCardProps) => {
       setRevealedStats(randomStats as typeof revealedStats);
     }, 100);
 
-    // Set final values after 1 second
-    setTimeout(() => {
-      clearInterval(animationInterval);
-      setRevealedStats(statValues as typeof revealedStats);
-      setIsRevealing(false);
-    }, 4000);
+    await executeReveal(gameAddress, adventurerId);
+
+    const fetchMetadataRecursive = async () => {
+      const metadata = await fetchAdventurerMetadata(
+        gameAddress,
+        adventurerId,
+        networkConfig[network!].rpcUrl
+      );
+
+      if (statsRevealed(metadata)) {
+        // Stats are revealed, update the UI
+        clearInterval(animationInterval);
+        setRevealedStats({
+          str: metadata.attributes.find(
+            (attr: any) => attr.trait === "Strength"
+          ).value,
+          dex: metadata.attributes.find(
+            (attr: any) => attr.trait === "Dexterity"
+          ).value,
+          int: metadata.attributes.find(
+            (attr: any) => attr.trait === "Intelligence"
+          ).value,
+          vit: metadata.attributes.find(
+            (attr: any) => attr.trait === "Vitality"
+          ).value,
+          wis: metadata.attributes.find((attr: any) => attr.trait === "Wisdom")
+            .value,
+          cha: metadata.attributes.find(
+            (attr: any) => attr.trait === "Charisma"
+          ).value,
+        });
+        setNewMetadata(metadata);
+        setIsRevealing(false);
+      } else {
+        // Stats are not revealed yet, try again in 4 seconds
+        setTimeout(fetchMetadataRecursive, 4000);
+      }
+    };
+
+    // Start the recursive fetching
+    fetchMetadataRecursive();
   };
+
+  useEffect(() => {
+    if (statsRevealed(formatMetadata)) {
+      setRevealedStats({
+        str: formatMetadata.attributes.find(
+          (attr: any) => attr.trait === "Strength"
+        ).value,
+        dex: formatMetadata.attributes.find(
+          (attr: any) => attr.trait === "Dexterity"
+        ).value,
+        int: formatMetadata.attributes.find(
+          (attr: any) => attr.trait === "Intelligence"
+        ).value,
+        vit: formatMetadata.attributes.find(
+          (attr: any) => attr.trait === "Vitality"
+        ).value,
+        wis: formatMetadata.attributes.find(
+          (attr: any) => attr.trait === "Wisdom"
+        ).value,
+        cha: formatMetadata.attributes.find(
+          (attr: any) => attr.trait === "Charisma"
+        ).value,
+      });
+    }
+  }, []);
 
   const colorMap = (stat: number) => {
     if (isRevealing) return "";
@@ -99,7 +164,12 @@ const AdventurerCard = ({ meta }: AdventurerCardProps) => {
           </span>
         ))}
       </div>
-      <img key={meta.name} src={meta.image} alt={meta.name} className="w-72" />
+      <img
+        key={formatMetadata.name}
+        src={formatMetadata.image}
+        alt={formatMetadata.name}
+        className="w-72"
+      />
     </div>
   );
 };
