@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../components/Button";
 import { useUiSounds, soundSelector } from "../hooks/useUISound";
 import { useAccount, useConnect, useDisconnect } from "@starknet-react/core";
@@ -12,11 +12,14 @@ import { Network } from "../lib/types";
 import { networkConfig } from "../lib/networkConfig";
 
 const Claim = () => {
-  // const [delegateAccount, setDelegateAccount] = useState("");
+  const [nftWallet, setNftWallet] = useState("");
+  const [controllerAccount, setControllerAccount] = useState("");
+  const [claimedGames, setClaimedGames] = useState([]);
   const { play: clickPlay } = useUiSounds(soundSelector.click);
-  const { setClaiming, setClaimed, claimedData } = useUIStore();
+  const { setClaiming, setClaimed, claimedData, setPreparingClaim } =
+    useUIStore();
 
-  const { connectors, connect } = useConnect();
+  const { connectors, connect, connector } = useConnect();
   const { disconnect } = useDisconnect();
   const { account, address } = useAccount();
   const network: Network = import.meta.env.VITE_NETWORK;
@@ -29,30 +32,43 @@ const Claim = () => {
   );
 
   useEffect(() => {
-    if (account && freeGamesAvailable.length === 0) {
+    if (account && claimedData.length > 0 && freeGamesAvailable.length === 0) {
       setClaimed(true);
     }
   }, [freeGamesAvailable]);
 
   const handleCartridgeOnboarding = async () => {
-    // clickPlay();
-    // setDelegateAccount(address!);
-    // const cartridgeConnector = connectors.find(
-    //   (connector) => connector.id === "cartridge"
-    // );
-    // if (cartridgeConnector) {
-    //   connect({ connector: cartridgeConnector });
-    // }
-    executeClaimProcess();
+    clickPlay();
+    setPreparingClaim(true);
+    setNftWallet(connector?.id!);
+    setClaimedGames(freeGamesAvailable);
+    const cartridgeConnector = connectors.find(
+      (connector) => connector.id === "cartridge"
+    );
+    if (cartridgeConnector) {
+      connect({ connector: cartridgeConnector });
+    }
   };
 
   const executeClaimProcess = async () => {
     try {
+      // setDelegateAccount(address!);
       // await executeSetDelegate(delegateAccount);
+      console.log(account);
+      console.log("claiming");
+      console.log(connectors);
       await executeClaim(
         networkConfig[network!].gameAddress,
-        freeGamesAvailable
+        claimedGames,
+        controllerAccount
       );
+      const cartridgeConnector = connectors.find(
+        (connector) => connector.id === "cartridge"
+      );
+      if (cartridgeConnector) {
+        connect({ connector: cartridgeConnector });
+      }
+      setPreparingClaim(false);
       setClaiming(true);
     } catch (error) {
       setClaiming(false);
@@ -60,15 +76,41 @@ const Claim = () => {
     }
   };
 
-  // useEffect(() => {
-  //   if (connector?.id === "cartridge" && account) {
-  //     const timer = setTimeout(() => {
-  //       executeClaimProcess();
-  //     }, 2000); // Wait for 2 seconds (adjust as needed)
+  useEffect(() => {
+    if (controllerAccount) {
+      const nftConnector = connectors.find(
+        (connector) => connector.id === nftWallet
+      );
+      if (nftConnector) {
+        connect({ connector: nftConnector });
+      }
+    }
+  }, [controllerAccount]);
 
-  //     return () => clearTimeout(timer); // Clean up the timer
-  //   }
-  // }, [delegateAccount, connector, account]);
+  useEffect(() => {
+    if (connector?.id === "cartridge" && account) {
+      const timer = setTimeout(() => {
+        setControllerAccount(address!);
+      }, 2000); // Wait for 2 seconds (adjust as needed)
+
+      return () => clearTimeout(timer); // Clean up the timer
+    }
+  }, [connector, account]);
+
+  useEffect(() => {
+    if (connector?.id !== "cartridge" && account) {
+      if (controllerAccount) {
+        const timer = setTimeout(() => {
+          executeClaimProcess();
+        }, 2000); // Wait for 2 seconds (adjust as needed)
+
+        return () => clearTimeout(timer); // Clean up the timer
+      }
+    }
+  }, [connector, account]);
+
+  console.log(connector);
+  console.log(account);
 
   const getCollectionFreeGames = (tokens: string[]) => {
     return freeGamesAvailable.filter((item: any) =>
@@ -186,7 +228,9 @@ const Claim = () => {
                 </p>
                 <Button
                   size={"lg"}
-                  disabled={address === undefined}
+                  disabled={
+                    address === undefined || freeGamesAvailable.length === 0
+                  }
                   onClick={() => handleCartridgeOnboarding()}
                 >
                   <span className="flex flex-row gap-2">

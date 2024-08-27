@@ -8,6 +8,8 @@ type State = {
   setClaimed: (claimed: boolean) => void;
   claiming: boolean;
   setClaiming: (claiming: boolean) => void;
+  preparingClaim: boolean;
+  setPreparingClaim: (preparingClaim: boolean) => void;
   adventurersMetadata: AdventurerMetadata[];
   setAdventurersMetadata: (metadata: AdventurerMetadata[]) => void;
   claimedData: any[];
@@ -21,6 +23,8 @@ export const useUIStore = create<State>((set) => ({
   setClaimed: (claimed) => set({ claimed }),
   claiming: false,
   setClaiming: (claiming) => set({ claiming }),
+  preparingClaim: false,
+  setPreparingClaim: (preparingClaim) => set({ preparingClaim }),
   adventurersMetadata: [],
   setAdventurersMetadata: (metadata) => set({ adventurersMetadata: metadata }),
   claimedData: [],

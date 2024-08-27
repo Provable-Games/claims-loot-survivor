@@ -37,7 +37,11 @@ const useSyscalls = () => {
       .catch((e) => console.error(e));
   };
 
-  const executeClaim = async (gameAddress: string, freeGames: any[]) => {
+  const executeClaim = async (
+    gameAddress: string,
+    freeGames: any[],
+    controllerAccount: string
+  ) => {
     // if (!account) {
     //   return;
     // }
@@ -45,6 +49,10 @@ const useSyscalls = () => {
     // if (connector?.id !== "cartridge") {
     //   return;
     // }
+
+    console.log(gameAddress);
+    console.log(freeGames);
+    console.log(controllerAccount);
 
     const calls = freeGames.map((game) => ({
       contractAddress: gameAddress,
@@ -60,6 +68,7 @@ const useSyscalls = () => {
         "1", // all the free games should not reveal stats immediately
         game.token, // collection address
         game.tokenId.toString(), // token id
+        controllerAccount,
       ],
     }));
 

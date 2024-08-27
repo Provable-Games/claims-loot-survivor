@@ -2,6 +2,7 @@ import { useCallback, useEffect } from "react";
 import Claim from "./containers/Claim";
 import Claimed from "./containers/Claimed";
 import Claiming from "./containers/Claiming";
+import PreparingClaim from "./containers/PreparingClaim";
 import { useUIStore } from "./hooks/useUIStore";
 import { networkConfig } from "./lib/networkConfig";
 import { fetchAdventurerMetadata } from "./api/fetchMetadata";
@@ -19,15 +20,19 @@ const App = () => {
     setClaimed,
     claimedData,
     setClaimedData,
+    preparingClaim,
   } = useUIStore();
 
   const { address } = useAccount();
 
   const network: Network = import.meta.env.VITE_NETWORK;
 
+  const unclaimedGamesCount = claimedData.filter(
+    (token: any) => !token.freeGameUsed
+  ).length;
+
   useEffect(() => {
-    if (claimedData.length > 0) {
-      console.log(claimedData);
+    if (claimedData.length > 0 && unclaimedGamesCount === 0) {
       const fetchImages = async () => {
         const adventurersMetadata = await Promise.all(
           claimedData.map((claimed) =>
@@ -78,6 +83,7 @@ const App = () => {
         className="absolute w-full pointer-events-none crt-frame hidden sm:block"
       />
       {claimed ? <Claimed /> : <Claim />}
+      {preparingClaim && <PreparingClaim />}
       {claiming && <Claiming />}
     </div>
   );
