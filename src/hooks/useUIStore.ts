@@ -14,6 +14,8 @@ type State = {
   setAdventurersMetadata: (metadata: AdventurerMetadata[]) => void;
   claimedData: any[];
   setClaimedData: (claimedData: any[]) => void;
+  username: string;
+  setUsername: (username: string) => void;
 };
 
 export const useUIStore = create<State>((set) => ({
@@ -29,4 +31,6 @@ export const useUIStore = create<State>((set) => ({
   setAdventurersMetadata: (metadata) => set({ adventurersMetadata: metadata }),
   claimedData: [],
   setClaimedData: (claimedData) => set({ claimedData }),
+  username: "",
+  setUsername: (username) => set({ username }),
 }));

@@ -8,12 +8,13 @@ import { useUIStore } from "../hooks/useUIStore";
 import useSyscalls from "../hooks/useSyscalls";
 import { Network } from "../lib/types";
 import { networkConfig } from "../lib/networkConfig";
-// import { useAccount } from "@starknet-react/core";
-import { statsRevealed } from "../lib/utils";
+import { useAccount, useDisconnect } from "@starknet-react/core";
+import { displayAddress, statsRevealed } from "../lib/utils";
 
 const Claimed = () => {
-  // const { address } = useAccount();
-  const { adventurersMetadata, claimedData } = useUIStore();
+  const { address } = useAccount();
+  const { disconnect } = useDisconnect();
+  const { adventurersMetadata, claimedData, username } = useUIStore();
   const pageSize = 5;
   const [currentPage, setCurrentPage] = useState(0);
   const [hideRevealed, setHideRevealed] = useState(false);
@@ -59,6 +60,20 @@ const Claimed = () => {
   return (
     <div className="min-h-screen w-full flex flex-col justify-between items-center bg-terminal-black sm:pt-8 sm:p-8 lg:p-10 bg-[url('/scenes/fountain.png')] bg-cover bg-center bg-no-repeat">
       <Confetti />
+      <span className="absolute flex flex-row gap-2 right-20">
+        <p className="text-2xl uppercase">{username}</p>
+        <Button
+          size={"xxs"}
+          disabled={address === undefined}
+          onClick={() => {
+            disconnect();
+            clickPlay();
+          }}
+          className="h-8"
+        >
+          Disconnect
+        </Button>
+      </span>
       <div className="relative flex flex-col items-center gap-8">
         <h1 className="m-0 uppercase text-4xl sm:text-6xl text-center">
           Claimed Free Games

@@ -8,8 +8,9 @@ import { networkConfig } from "./lib/networkConfig";
 import { fetchAdventurerMetadata } from "./api/fetchMetadata";
 import { Network } from "./lib/types";
 import { useQuery } from "@apollo/client";
-import { getTokensByOwner } from ".//hooks/graphql/queries";
-import { useAccount } from "@starknet-react/core";
+import { getGamesByNftOwner } from ".//hooks/graphql/queries";
+import { useAccount, useConnect } from "@starknet-react/core";
+import CartridgeConnector from "@cartridge/connector";
 
 const App = () => {
   const {
@@ -21,9 +22,11 @@ const App = () => {
     claimedData,
     setClaimedData,
     preparingClaim,
+    setUsername,
   } = useUIStore();
 
   const { address } = useAccount();
+  const { connector } = useConnect();
 
   const network: Network = import.meta.env.VITE_NETWORK;
 
@@ -55,7 +58,7 @@ const App = () => {
     ownerAddress: address ? address : "0x0",
   };
 
-  const { refetch } = useQuery(getTokensByOwner, {
+  const { refetch } = useQuery(getGamesByNftOwner, {
     variables: tokenByOwnerVariables,
     skip: !address,
     fetchPolicy: "network-only",
@@ -72,6 +75,26 @@ const App = () => {
   useEffect(() => {
     if (address) {
       fetchData();
+    }
+  }, [address]);
+
+  useEffect(() => {
+    if (connector?.id.includes("cartridge")) {
+      const init = async () => {
+        const username = await (
+          connector as unknown as CartridgeConnector
+        ).username();
+        console.log(username);
+        setUsername(username || "");
+      };
+      init();
+      console.log(connector?.id.includes("cartridge"));
+    }
+  }, [connector]);
+
+  useEffect(() => {
+    if (!address) {
+      setClaimed(false);
     }
   }, [address]);
 

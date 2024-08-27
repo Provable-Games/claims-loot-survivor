@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "../components/Button";
 import { useUiSounds, soundSelector } from "../hooks/useUISound";
 import { useAccount, useConnect, useDisconnect } from "@starknet-react/core";
-import { getWalletConnectors } from "../lib/connectors";
+import { getCartridgeConnector, getWalletConnectors } from "../lib/connectors";
 import { CartridgeIcon, CompleteIcon } from "../components/Icons";
 import { collectionsData } from "../lib/constants";
 import { displayAddress, padAddress } from "../lib/utils";
@@ -10,13 +10,15 @@ import useSyscalls from "../hooks/useSyscalls";
 import { useUIStore } from "../hooks/useUIStore";
 import { Network } from "../lib/types";
 import { networkConfig } from "../lib/networkConfig";
+import { useQuery } from "@apollo/client";
 
 const Claim = () => {
   const [nftWallet, setNftWallet] = useState("");
   const [controllerAccount, setControllerAccount] = useState("");
   const [claimedGames, setClaimedGames] = useState([]);
+  const [selectSkip, setSelectSkip] = useState(false);
   const { play: clickPlay } = useUiSounds(soundSelector.click);
-  const { setClaiming, setClaimed, claimedData, setPreparingClaim } =
+  const { setClaiming, setClaimed, claimed, claimedData, setPreparingClaim } =
     useUIStore();
 
   const { connectors, connect, connector } = useConnect();
@@ -30,6 +32,20 @@ const Claim = () => {
   const freeGamesAvailable = claimedData.filter(
     (token: any) => !token.freeGameUsed
   );
+
+  // const { refetch } = useQuery(getGamesByNftOwner, {
+  //   variables: tokenByOwnerVariables,
+  //   skip: !address,
+  //   fetchPolicy: "network-only",
+  // });
+
+  // const fetchData = useCallback(async () => {
+  //   const data: any = await refetch({
+  //     ownerAddress: address ? address : "0x0",
+  //   });
+  //   const tokensData = data ? data.data.tokensWithFreeGameStatus : [];
+  //   setClaimedData(tokensData);
+  // }, [address]);
 
   useEffect(() => {
     if (account && claimedData.length > 0 && freeGamesAvailable.length === 0) {
@@ -77,7 +93,7 @@ const Claim = () => {
   };
 
   useEffect(() => {
-    if (controllerAccount) {
+    if (controllerAccount && !claimed) {
       const nftConnector = connectors.find(
         (connector) => connector.id === nftWallet
       );
@@ -89,17 +105,21 @@ const Claim = () => {
 
   useEffect(() => {
     if (connector?.id === "cartridge" && account) {
-      const timer = setTimeout(() => {
-        setControllerAccount(address!);
-      }, 2000); // Wait for 2 seconds (adjust as needed)
+      if (selectSkip) {
+        setClaimed(true);
+      } else {
+        const timer = setTimeout(() => {
+          setControllerAccount(address!);
+        }, 2000); // Wait for 2 seconds (adjust as needed)
 
-      return () => clearTimeout(timer); // Clean up the timer
+        return () => clearTimeout(timer); // Clean up the timer
+      }
     }
   }, [connector, account]);
 
   useEffect(() => {
     if (connector?.id !== "cartridge" && account) {
-      if (controllerAccount) {
+      if (controllerAccount && !claimed) {
         const timer = setTimeout(() => {
           executeClaimProcess();
         }, 2000); // Wait for 2 seconds (adjust as needed)
@@ -198,7 +218,7 @@ const Claim = () => {
               )
             )}
           </div>
-          <div className="w-full h-[200px] sm:h-[300px] flex flex-col border border-terminal-green items-center justify-center gap-10 p-5 mt-20">
+          <div className="w-full h-[200px] sm:h-[300px] flex flex-col border border-terminal-green items-center justify-center gap-5 p-5 mt-20">
             {!address ? (
               <>
                 <p className="text-2xl uppercase">Check Eligibility</p>
@@ -216,6 +236,27 @@ const Claim = () => {
                       {`Login With ${connector.id}`}
                     </Button>
                   ))}
+                </div>
+                <p className="hidden sm:block text-2xl uppercase">
+                  Already Claimed?
+                </p>
+                <div className="hidden sm:flex flex-row gap-2">
+                  <Button
+                    size={"lg"}
+                    disabled={address !== undefined}
+                    onClick={() => {
+                      disconnect();
+                      connect({
+                        connector: getCartridgeConnector(connectors),
+                      });
+                      setSelectSkip(true);
+                    }}
+                  >
+                    Login With
+                    <span className="flex flex-row text-terminal-black pl-2">
+                      <CartridgeIcon /> Cartridge
+                    </span>
+                  </Button>
                 </div>
                 <div className="sm:hidden flex text-2xl">
                   Claim Games on Desktop
