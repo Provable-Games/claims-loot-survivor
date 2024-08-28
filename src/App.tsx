@@ -1,15 +1,13 @@
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 import Claim from "./containers/Claim";
 import Claimed from "./containers/Claimed";
 import Claiming from "./containers/Claiming";
-import PreparingClaim from "./containers/PreparingClaim";
+import PreparingClaim from "./containers/Preparing";
 import { useUIStore } from "./hooks/useUIStore";
 import { networkConfig } from "./lib/networkConfig";
 import { fetchAdventurerMetadata } from "./api/fetchMetadata";
 import { Network } from "./lib/types";
-import { useQuery } from "@apollo/client";
-import { getGamesByNftOwner } from ".//hooks/graphql/queries";
-import { useAccount, useConnect } from "@starknet-react/core";
+import { useConnect } from "@starknet-react/core";
 import CartridgeConnector from "@cartridge/connector";
 
 const App = () => {
@@ -20,22 +18,25 @@ const App = () => {
     setClaiming,
     setClaimed,
     claimedData,
-    setClaimedData,
     preparingClaim,
+    preparingReveal,
     setUsername,
+    fetchingMetadata,
+    setFetchingMetadata,
   } = useUIStore();
 
-  const { address } = useAccount();
   const { connector } = useConnect();
 
   const network: Network = import.meta.env.VITE_NETWORK;
 
-  const unclaimedGamesCount = claimedData.filter(
-    (token: any) => !token.freeGameUsed
-  ).length;
+  console.log(claimedData);
 
   useEffect(() => {
-    if (claimedData.length > 0 && unclaimedGamesCount === 0) {
+    if (
+      claimedData.length > 0 &&
+      fetchingMetadata &&
+      connector?.id.includes("cartridge")
+    ) {
       const fetchImages = async () => {
         const adventurersMetadata = await Promise.all(
           claimedData.map((claimed) =>
@@ -46,37 +47,17 @@ const App = () => {
             )
           )
         );
+        console.log(adventurersMetadata);
         setAdventurersMetadata(adventurersMetadata);
         setClaiming(false);
+        setFetchingMetadata(false);
         setClaimed(true);
       };
       fetchImages();
     }
-  }, [claimedData]);
+  }, [claimedData, fetchingMetadata, connector]);
 
-  const tokenByOwnerVariables = {
-    ownerAddress: address ? address : "0x0",
-  };
-
-  const { refetch } = useQuery(getGamesByNftOwner, {
-    variables: tokenByOwnerVariables,
-    skip: !address,
-    fetchPolicy: "network-only",
-  });
-
-  const fetchData = useCallback(async () => {
-    const data: any = await refetch({
-      ownerAddress: address ? address : "0x0",
-    });
-    const tokensData = data ? data.data.tokensWithFreeGameStatus : [];
-    setClaimedData(tokensData);
-  }, [address]);
-
-  useEffect(() => {
-    if (address) {
-      fetchData();
-    }
-  }, [address]);
+  console.log(claimed);
 
   useEffect(() => {
     if (connector?.id.includes("cartridge")) {
@@ -84,19 +65,11 @@ const App = () => {
         const username = await (
           connector as unknown as CartridgeConnector
         ).username();
-        console.log(username);
         setUsername(username || "");
       };
       init();
-      console.log(connector?.id.includes("cartridge"));
     }
   }, [connector]);
-
-  useEffect(() => {
-    if (!address) {
-      setClaimed(false);
-    }
-  }, [address]);
 
   return (
     <div className="fixed min-h-screen w-full overflow-hidden text-terminal-green bg-conic-to-br to-terminal-black from-terminal-black bezel-container">
@@ -106,7 +79,8 @@ const App = () => {
         className="absolute w-full pointer-events-none crt-frame hidden sm:block"
       />
       {claimed ? <Claimed /> : <Claim />}
-      {preparingClaim && <PreparingClaim />}
+      {preparingClaim && <PreparingClaim type="claim" />}
+      {preparingReveal && <PreparingClaim type="reveal" />}
       {claiming && <Claiming />}
     </div>
   );

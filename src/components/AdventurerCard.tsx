@@ -4,7 +4,7 @@ import useSyscalls from "../hooks/useSyscalls";
 import { networkConfig } from "../lib/networkConfig";
 import { AdventurerMetadata, Network } from "../lib/types";
 import { fetchAdventurerMetadata } from "../api/fetchMetadata";
-import { statsRevealed } from "../lib/utils";
+import { statsRevealed, colorMap } from "../lib/utils";
 
 export interface AdventurerCardProps {
   meta: any;
@@ -111,15 +111,6 @@ const AdventurerCard = ({ meta, adventurerId }: AdventurerCardProps) => {
     }
   }, []);
 
-  const colorMap = (stat: number) => {
-    if (isRevealing) return "";
-    if (stat <= 0) return "bg-red-900";
-    if (stat <= 2) return "bg-terminal-yellow-50";
-    if (stat <= 4) return "bg-terminal-green-50";
-    if (stat <= 9) return "bg-terminal-green text-terminal-black";
-    return "bg-terminal-green text-terminal-black";
-  };
-
   return (
     <div
       className={`relative flex flex-col bg-black border border-terminal-green border-5`}
@@ -155,7 +146,8 @@ const AdventurerCard = ({ meta, adventurerId }: AdventurerCardProps) => {
               revealedStats[stat as keyof typeof revealedStats] === "?"
                 ? "bg-terminal-black"
                 : colorMap(
-                    parseInt(revealedStats[stat as keyof typeof revealedStats])
+                    parseInt(revealedStats[stat as keyof typeof revealedStats]),
+                    isRevealing
                   )
             } w-12 flex flex-col text-center`}
           >

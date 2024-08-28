@@ -69,3 +69,12 @@ export const statsRevealed = (meta: any) => {
     revealedStats.reduce((sum, stat) => sum + stat, 0) > 0;
   return allRevealed && sumGreaterThanZero;
 };
+
+export const colorMap = (stat: number, isRevealing: boolean) => {
+  if (isRevealing) return "";
+  if (stat <= 0) return "bg-red-900";
+  if (stat <= 2) return "bg-terminal-yellow-50";
+  if (stat <= 4) return "bg-terminal-green-50";
+  if (stat <= 9) return "bg-terminal-green text-terminal-black";
+  return "bg-terminal-green text-terminal-black";
+};

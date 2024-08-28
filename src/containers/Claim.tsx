@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "../components/Button";
 import { useUiSounds, soundSelector } from "../hooks/useUISound";
 import { useAccount, useConnect, useDisconnect } from "@starknet-react/core";
@@ -11,6 +11,7 @@ import { useUIStore } from "../hooks/useUIStore";
 import { Network } from "../lib/types";
 import { networkConfig } from "../lib/networkConfig";
 import { useQuery } from "@apollo/client";
+import { getGamesByNftOwner } from "../hooks/graphql/queries";
 
 const Claim = () => {
   const [nftWallet, setNftWallet] = useState("");
@@ -18,8 +19,15 @@ const Claim = () => {
   const [claimedGames, setClaimedGames] = useState([]);
   const [selectSkip, setSelectSkip] = useState(false);
   const { play: clickPlay } = useUiSounds(soundSelector.click);
-  const { setClaiming, setClaimed, claimed, claimedData, setPreparingClaim } =
-    useUIStore();
+  const {
+    setClaiming,
+    setClaimed,
+    claimed,
+    claimedData,
+    setClaimedData,
+    setPreparingClaim,
+    setFetchingMetadata,
+  } = useUIStore();
 
   const { connectors, connect, connector } = useConnect();
   const { disconnect } = useDisconnect();
@@ -33,22 +41,35 @@ const Claim = () => {
     (token: any) => !token.freeGameUsed
   );
 
-  // const { refetch } = useQuery(getGamesByNftOwner, {
-  //   variables: tokenByOwnerVariables,
-  //   skip: !address,
-  //   fetchPolicy: "network-only",
-  // });
+  const tokenByOwnerVariables = {
+    ownerAddress: address ? address : "0x0",
+  };
 
-  // const fetchData = useCallback(async () => {
-  //   const data: any = await refetch({
-  //     ownerAddress: address ? address : "0x0",
-  //   });
-  //   const tokensData = data ? data.data.tokensWithFreeGameStatus : [];
-  //   setClaimedData(tokensData);
-  // }, [address]);
+  const { refetch } = useQuery(getGamesByNftOwner, {
+    variables: tokenByOwnerVariables,
+    skip: !address,
+    fetchPolicy: "network-only",
+  });
+
+  const fetchData = useCallback(async () => {
+    if (connector?.id !== "cartridge") {
+      const data: any = await refetch({
+        ownerAddress: address ? address : "0x0",
+      });
+      const tokensData = data ? data.data.tokensWithFreeGameStatus : [];
+      setClaimedData(tokensData);
+    }
+  }, [address, connector]);
+
+  useEffect(() => {
+    if (address) {
+      fetchData();
+    }
+  }, [address]);
 
   useEffect(() => {
     if (account && claimedData.length > 0 && freeGamesAvailable.length === 0) {
+      console.log("CLAIMED NOW");
       setClaimed(true);
     }
   }, [freeGamesAvailable]);
@@ -66,13 +87,12 @@ const Claim = () => {
     }
   };
 
+  console.log(account);
+
   const executeClaimProcess = async () => {
     try {
       // setDelegateAccount(address!);
       // await executeSetDelegate(delegateAccount);
-      console.log(account);
-      console.log("claiming");
-      console.log(connectors);
       await executeClaim(
         networkConfig[network!].gameAddress,
         claimedGames,
@@ -84,8 +104,7 @@ const Claim = () => {
       if (cartridgeConnector) {
         connect({ connector: cartridgeConnector });
       }
-      setPreparingClaim(false);
-      setClaiming(true);
+      setFetchingMetadata(true);
     } catch (error) {
       setClaiming(false);
       console.log(error);
@@ -117,6 +136,8 @@ const Claim = () => {
     }
   }, [connector, account]);
 
+  console.log(controllerAccount);
+
   useEffect(() => {
     if (connector?.id !== "cartridge" && account) {
       if (controllerAccount && !claimed) {
@@ -128,9 +149,6 @@ const Claim = () => {
       }
     }
   }, [connector, account]);
-
-  console.log(connector);
-  console.log(account);
 
   const getCollectionFreeGames = (tokens: string[]) => {
     return freeGamesAvailable.filter((item: any) =>

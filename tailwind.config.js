@@ -25,6 +25,20 @@ export default {
       animation: {
         pulseFast: 'pulse 0.5s cubic-bezier(0.4, 0, 0.6, 1) infinite'
       },
+      keyframes: {
+        cardToFront: {
+          '0%': { transform: 'translateX(100%) translateY(-50%) scale(0.8)', opacity: '0' },
+          '100%': { transform: 'translateX(-50%) translateY(-50%) scale(1)', opacity: '1' },
+        },
+        cardToBack: {
+          '0%': { transform: 'translateX(-50%) translateY(-50%) scale(1)', opacity: '1' },
+          '100%': { transform: 'translateX(-200%) translateY(-50%) scale(0.8)', opacity: '0' },
+        },
+      },
+      animation: {
+        cardToFront: 'cardToFront 0.5s forwards',
+        cardToBack: 'cardToBack 0.5s forwards',
+      },
     },
   },
   plugins: [],

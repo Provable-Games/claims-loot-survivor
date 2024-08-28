@@ -7,6 +7,7 @@ import {
 } from "../lib/constants";
 import { padAddress, getKeyByValue, stringToFelt } from "../lib/utils";
 import { parseEvents } from "../lib/parseEvents";
+import { useUIStore } from "./useUIStore";
 // import { useUIStore } from "./useUIStore";
 // import CartridgeConnector from "@cartridge/connector";
 
@@ -14,6 +15,7 @@ const useSyscalls = () => {
   const { account } = useAccount();
   const { connector } = useConnect();
   const { provider } = useProvider();
+  const { setPreparingClaim, setClaiming } = useUIStore();
 
   const executeSetDelegate = async (delegateAddress: string) => {
     if (!account) {
@@ -42,18 +44,6 @@ const useSyscalls = () => {
     freeGames: any[],
     controllerAccount: string
   ) => {
-    // if (!account) {
-    //   return;
-    // }
-
-    // if (connector?.id !== "cartridge") {
-    //   return;
-    // }
-
-    console.log(gameAddress);
-    console.log(freeGames);
-    console.log(controllerAccount);
-
     const calls = freeGames.map((game) => ({
       contractAddress: gameAddress,
       entrypoint: "enter_launch_tournament",
@@ -73,6 +63,9 @@ const useSyscalls = () => {
     }));
 
     const tx = await account.execute(calls).catch((e) => console.error(e));
+
+    setPreparingClaim(false);
+    setClaiming(true);
 
     const receipt = await provider?.waitForTransaction(
       (tx as any)?.transaction_hash

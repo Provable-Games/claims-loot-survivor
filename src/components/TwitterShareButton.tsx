@@ -14,7 +14,8 @@ const TwitterShareButton: React.FC<Props> = ({ text, className }) => {
 
   return (
     <Button
-      className={`flex flex-row gap-0 sm:gap-5 items-center h-6 sm:h-10 + ${className}`}
+      className={`flex flex-row gap-0 sm:gap-5 items-center h-6 sm:h-14 + ${className}`}
+      variant="token"
     >
       <div className="w-10 h-10 flex items-center justify-center">
         <TwitterIcon />

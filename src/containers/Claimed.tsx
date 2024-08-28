@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "../components/Button";
 import { ChevronIcon, EyeIcon } from "../components/Icons";
 import Confetti from "../components/animations/Confetti";
@@ -9,12 +9,24 @@ import useSyscalls from "../hooks/useSyscalls";
 import { Network } from "../lib/types";
 import { networkConfig } from "../lib/networkConfig";
 import { useAccount, useDisconnect } from "@starknet-react/core";
-import { displayAddress, statsRevealed } from "../lib/utils";
+import { statsRevealed } from "../lib/utils";
+import RevealAll from "../components/animations/RevealAll";
+import TwitterShareButton from "../components/TwitterShareButton";
+import { useQuery } from "@apollo/client";
+import { getGamesByGameOwner } from "../hooks/graphql/queries";
 
 const Claimed = () => {
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
-  const { adventurersMetadata, claimedData, username } = useUIStore();
+  const {
+    adventurersMetadata,
+    claimedData,
+    setClaimedData,
+    username,
+    isRevealingAll,
+    setIsRevealingAll,
+    setPreparingReveal,
+  } = useUIStore();
   const pageSize = 5;
   const [currentPage, setCurrentPage] = useState(0);
   const [hideRevealed, setHideRevealed] = useState(false);
@@ -53,17 +65,39 @@ const Claimed = () => {
     (token: any) => token.freeGameRevealed
   ).length;
 
-  // const adventurers = claimedTokensData.tokensWithFreeGameStatus;
-  console.log(adventurersMetadata);
-  console.log(claimedData);
+  console.log(isRevealingAll);
+
+  const tokenByOwnerVariables = {
+    ownerAddress: address ? address : "0x0",
+  };
+
+  const { refetch } = useQuery(getGamesByGameOwner, {
+    variables: tokenByOwnerVariables,
+    skip: !address,
+    fetchPolicy: "network-only",
+  });
+
+  const fetchData = useCallback(async () => {
+    const data: any = await refetch({
+      ownerAddress: address ? address : "0x0",
+    });
+    const tokensData = data ? data.data.tokensWithFreeGameStatus : [];
+    setClaimedData(tokensData);
+  }, [address]);
+
+  useEffect(() => {
+    if (address) {
+      fetchData();
+    }
+  }, [address]);
 
   return (
     <div className="min-h-screen w-full flex flex-col justify-between items-center bg-terminal-black sm:pt-8 sm:p-8 lg:p-10 bg-[url('/scenes/fountain.png')] bg-cover bg-center bg-no-repeat">
       <Confetti />
-      <span className="absolute flex flex-row gap-2 right-20">
+      <span className="absolute flex flex-row gap-2 top-20 right-32">
         <p className="text-2xl uppercase">{username}</p>
         <Button
-          size={"xxs"}
+          size={"xs"}
           disabled={address === undefined}
           onClick={() => {
             disconnect();
@@ -85,7 +119,13 @@ const Claimed = () => {
           <Button
             size="lg"
             variant="token"
-            onClick={() => executeRevealAll(gameAddress, unrevealedGames)}
+            onClick={async () => {
+              clickPlay();
+              setPreparingReveal(true);
+              await executeRevealAll(gameAddress, unrevealedGames);
+              setPreparingReveal(false);
+              setIsRevealingAll(true);
+            }}
           >
             Reveal All
           </Button>
@@ -106,40 +146,52 @@ const Claimed = () => {
           </Button>
         </div>
       </div>
-      <div className="flex flex-row gap-2">
-        {currentPage > 0 && (
-          <span
-            className="absolute top-1/2 left-10 w-20 rotate-180 cursor-pointer"
-            onClick={() => handleClick(currentPage - 1)}
-          >
-            <ChevronIcon />
-          </span>
-        )}
-        {currentAdventurers.map((meta: any, index: any) => (
-          <AdventurerCard
-            meta={meta}
-            adventurerId={currentClaimedData[index].adventurerId}
-            key={currentClaimedData[index].adventurerId}
-          />
-        ))}
-        {!finalPage && (
-          <span
-            className="absolute top-1/2 right-10 w-20 cursor-pointer"
-            onClick={() => handleClick(currentPage + 1)}
-          >
-            <ChevronIcon />
-          </span>
-        )}
-      </div>
+      {!isRevealingAll ? (
+        <div className="flex flex-row gap-2">
+          {currentPage > 0 && (
+            <span
+              className="absolute top-1/2 left-10 w-20 rotate-180 cursor-pointer"
+              onClick={() => handleClick(currentPage - 1)}
+            >
+              <ChevronIcon />
+            </span>
+          )}
+          {currentAdventurers.map((meta: any, index: any) => (
+            <AdventurerCard
+              meta={meta}
+              // adventurerId={currentClaimedData[index].adventurerId}
+              // key={currentClaimedData[index].adventurerId}
+              adventurerId={currentClaimedData[index]}
+              key={currentClaimedData[index]}
+            />
+          ))}
+          {!finalPage && (
+            <span
+              className="absolute top-1/2 right-10 w-20 cursor-pointer"
+              onClick={() => handleClick(currentPage + 1)}
+            >
+              <ChevronIcon />
+            </span>
+          )}
+        </div>
+      ) : (
+        <RevealAll adventurersMetadata={currentAdventurers} interval={3000} />
+      )}
       <div className="flex flex-col gap-2">
+        <TwitterShareButton text="I just claimed my free games on @lootsurvivorio! 🎉" />
         <Button
           size="lg"
-          variant="outline"
-          className="bg-terminal-black border border-terminal-green"
+          onClick={() => {
+            clickPlay();
+            window.open(
+              "https://lootsurvivor.io/",
+              "_blank",
+              "noopener,noreferrer"
+            );
+          }}
         >
-          Share to Twitter
+          Play
         </Button>
-        <Button size="lg">Play</Button>
       </div>
     </div>
   );
