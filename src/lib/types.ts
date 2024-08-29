@@ -5,3 +5,9 @@ export type AdventurerMetadata = {
   name: string;
   description: string;
 };
+
+export type CollectionData = {
+  token: string;
+  alt: string;
+  image: string;
+};

@@ -14,18 +14,23 @@ import RevealAll from "../components/animations/RevealAll";
 import TwitterShareButton from "../components/TwitterShareButton";
 import { useQuery } from "@apollo/client";
 import { getGamesByGameOwner } from "../hooks/graphql/queries";
+import { fetchAdventurerMetadata } from "../api/fetchMetadata";
+import TokenLoader from "../components/animations/TokenLoader";
 
 const Claimed = () => {
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
   const {
     adventurersMetadata,
-    claimedData,
-    setClaimedData,
     username,
     isRevealingAll,
     setIsRevealingAll,
     setPreparingReveal,
+    setClaimed,
+    freeGamesData,
+    setFreeGamesData,
+    setAdventurersMetadata,
+    setAlreadyClaimed,
   } = useUIStore();
   const pageSize = 5;
   const [currentPage, setCurrentPage] = useState(0);
@@ -33,16 +38,17 @@ const Claimed = () => {
   const filteredAdventurers = hideRevealed
     ? adventurersMetadata.filter((meta) => !statsRevealed(meta))
     : adventurersMetadata;
-  const filteredClaimedData = hideRevealed
-    ? claimedData.filter(
-        (_, index) => !statsRevealed(adventurersMetadata[index])
-      )
-    : claimedData;
+  const filteredFreeGamesData = hideRevealed
+    ? freeGamesData.filter((_, index) => !freeGamesData[index].revealed)
+    : freeGamesData;
   const totalPages = Math.ceil(filteredAdventurers.length / pageSize);
   const startIndex = currentPage * pageSize;
   const endIndex = startIndex + pageSize;
   const currentAdventurers = filteredAdventurers.slice(startIndex, endIndex);
-  const currentClaimedData = filteredClaimedData.slice(startIndex, endIndex);
+  const currentFreeGamesData = filteredFreeGamesData.slice(
+    startIndex,
+    endIndex
+  );
   const finalPage = currentPage === totalPages - 1;
 
   const network: Network = import.meta.env.VITE_NETWORK;
@@ -57,15 +63,11 @@ const Claimed = () => {
 
   const { executeRevealAll } = useSyscalls();
 
-  const unrevealedGames = claimedData.filter(
-    (token: any) => !token.freeGameRevealed
-  );
+  const unrevealedGames = freeGamesData.filter((token: any) => !token.revealed);
 
-  const revealedGamesCount = claimedData.filter(
-    (token: any) => token.freeGameRevealed
+  const revealedGamesCount = freeGamesData.filter(
+    (token: any) => token.revealed
   ).length;
-
-  console.log(isRevealingAll);
 
   const tokenByOwnerVariables = {
     ownerAddress: address ? address : "0x0",
@@ -81,8 +83,8 @@ const Claimed = () => {
     const data: any = await refetch({
       ownerAddress: address ? address : "0x0",
     });
-    const tokensData = data ? data.data.tokensWithFreeGameStatus : [];
-    setClaimedData(tokensData);
+    const tokensData = data ? data.data.claimedFreeGames : [];
+    setFreeGamesData(tokensData);
   }, [address]);
 
   useEffect(() => {
@@ -91,10 +93,28 @@ const Claimed = () => {
     }
   }, [address]);
 
+  useEffect(() => {
+    // if (adventurersMetadata.length === 0 && freeGamesData.length > 0) {
+    const fetchImages = async () => {
+      const adventurersMetadata = await Promise.all(
+        freeGamesData.map((freeGame) =>
+          fetchAdventurerMetadata(
+            networkConfig[network!].gameAddress,
+            freeGame.adventurerId,
+            networkConfig[network!].rpcUrl
+          )
+        )
+      );
+      setAdventurersMetadata(adventurersMetadata);
+    };
+    fetchImages();
+    // }
+  }, [freeGamesData]);
+
   return (
     <div className="min-h-screen w-full flex flex-col justify-between items-center bg-terminal-black sm:pt-8 sm:p-8 lg:p-10 bg-[url('/scenes/fountain.png')] bg-cover bg-center bg-no-repeat">
       <Confetti />
-      <span className="absolute flex flex-row gap-2 top-20 right-32">
+      <span className="absolute flex flex-row items-center gap-2 top-20 right-32">
         <p className="text-2xl uppercase">{username}</p>
         <Button
           size={"xs"}
@@ -102,6 +122,8 @@ const Claimed = () => {
           onClick={() => {
             disconnect();
             clickPlay();
+            setClaimed(false);
+            setAlreadyClaimed(false);
           }}
           className="h-8"
         >
@@ -113,7 +135,7 @@ const Claimed = () => {
           Claimed Free Games
         </h1>
         <span className="absolute top-[60px] text-terminal-green text-xl">
-          ({revealedGamesCount}/{claimedData.length} REVEALED)
+          ({revealedGamesCount}/{freeGamesData.length} REVEALED)
         </span>
         <div className="flex flex-row items-center gap-2">
           <Button
@@ -147,33 +169,36 @@ const Claimed = () => {
         </div>
       </div>
       {!isRevealingAll ? (
-        <div className="flex flex-row gap-2">
-          {currentPage > 0 && (
-            <span
-              className="absolute top-1/2 left-10 w-20 rotate-180 cursor-pointer"
-              onClick={() => handleClick(currentPage - 1)}
-            >
-              <ChevronIcon />
-            </span>
-          )}
-          {currentAdventurers.map((meta: any, index: any) => (
-            <AdventurerCard
-              meta={meta}
-              // adventurerId={currentClaimedData[index].adventurerId}
-              // key={currentClaimedData[index].adventurerId}
-              adventurerId={currentClaimedData[index]}
-              key={currentClaimedData[index]}
-            />
-          ))}
-          {!finalPage && (
-            <span
-              className="absolute top-1/2 right-10 w-20 cursor-pointer"
-              onClick={() => handleClick(currentPage + 1)}
-            >
-              <ChevronIcon />
-            </span>
-          )}
-        </div>
+        adventurersMetadata.length > 0 ? (
+          <div className="flex flex-row gap-2">
+            {currentPage > 0 && (
+              <span
+                className="absolute top-1/2 left-10 w-20 rotate-180 cursor-pointer"
+                onClick={() => handleClick(currentPage - 1)}
+              >
+                <ChevronIcon />
+              </span>
+            )}
+            {freeGamesData.length > 0 &&
+              currentAdventurers.map((meta: any, index: any) => (
+                <AdventurerCard
+                  meta={meta}
+                  adventurerId={currentFreeGamesData[index].adventurerId}
+                  key={currentFreeGamesData[index].adventurerId}
+                />
+              ))}
+            {!finalPage && (
+              <span
+                className="absolute top-1/2 right-10 w-20 cursor-pointer"
+                onClick={() => handleClick(currentPage + 1)}
+              >
+                <ChevronIcon />
+              </span>
+            )}
+          </div>
+        ) : (
+          <TokenLoader />
+        )
       ) : (
         <RevealAll adventurersMetadata={currentAdventurers} interval={3000} />
       )}

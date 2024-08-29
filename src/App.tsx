@@ -23,23 +23,24 @@ const App = () => {
     setUsername,
     fetchingMetadata,
     setFetchingMetadata,
+    freeGamesData,
   } = useUIStore();
 
   const { connector } = useConnect();
 
   const network: Network = import.meta.env.VITE_NETWORK;
 
-  console.log(claimedData);
+  // console.log(claimedData);
 
   useEffect(() => {
     if (
-      claimedData.length > 0 &&
+      freeGamesData.length > 0 &&
       fetchingMetadata &&
       connector?.id.includes("cartridge")
     ) {
       const fetchImages = async () => {
         const adventurersMetadata = await Promise.all(
-          claimedData.map((claimed) =>
+          freeGamesData.map((claimed) =>
             fetchAdventurerMetadata(
               networkConfig[network!].gameAddress,
               claimed.adventurerId,
@@ -56,8 +57,6 @@ const App = () => {
       fetchImages();
     }
   }, [claimedData, fetchingMetadata, connector]);
-
-  console.log(claimed);
 
   useEffect(() => {
     if (connector?.id.includes("cartridge")) {

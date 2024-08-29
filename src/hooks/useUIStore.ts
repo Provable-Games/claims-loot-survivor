@@ -18,10 +18,14 @@ type State = {
   setAdventurersMetadata: (metadata: AdventurerMetadata[]) => void;
   claimedData: any[];
   setClaimedData: (claimedData: any[]) => void;
+  freeGamesData: any[];
+  setFreeGamesData: (freeGamesData: any[]) => void;
   username: string;
   setUsername: (username: string) => void;
   isRevealingAll: boolean;
   setIsRevealingAll: (isRevealingAll: boolean) => void;
+  alreadyClaimed: boolean;
+  setAlreadyClaimed: (alreadyClaimed: boolean) => void;
 };
 
 export const useUIStore = create<State>((set) => ({
@@ -41,8 +45,12 @@ export const useUIStore = create<State>((set) => ({
   setAdventurersMetadata: (metadata) => set({ adventurersMetadata: metadata }),
   claimedData: [],
   setClaimedData: (claimedData) => set({ claimedData }),
+  freeGamesData: [],
+  setFreeGamesData: (freeGamesData) => set({ freeGamesData }),
   username: "",
   setUsername: (username) => set({ username }),
   isRevealingAll: false,
   setIsRevealingAll: (isRevealingAll) => set({ isRevealingAll }),
+  alreadyClaimed: false,
+  setAlreadyClaimed: (alreadyClaimed) => set({ alreadyClaimed }),
 }));
