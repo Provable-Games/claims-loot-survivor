@@ -5,13 +5,16 @@ import { useUIStore } from "../../hooks/useUIStore";
 interface RevealAllProps {
   adventurersMetadata: any[];
   interval?: number;
+  onProgress?: (revealedCount: number) => void;
 }
 
 const RevealAll = ({
   adventurersMetadata,
   interval = 3000,
+  onProgress,
 }: RevealAllProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [revealedCount, setRevealedCount] = useState(0);
   const { setIsRevealingAll } = useUIStore();
 
   useEffect(() => {
@@ -36,6 +39,20 @@ const RevealAll = ({
       clearInterval(timer);
     };
   }, [interval, adventurersMetadata.length, setIsRevealingAll]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setRevealedCount((prev) => {
+        const newCount = Math.min(prev + 1, adventurersMetadata.length);
+        onProgress?.(newCount);
+        return newCount;
+      });
+    }, interval);
+
+    return () => clearInterval(timer);
+  }, [adventurersMetadata.length, interval, onProgress]);
+
+  console.log(adventurersMetadata);
 
   return (
     <div className="flex relative w-72 h-[480px]">

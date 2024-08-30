@@ -87,7 +87,7 @@ const Claim = () => {
   }, [address, connector, hashList]);
 
   useEffect(() => {
-    if (address && freeGamesData.length === 0) {
+    if (address) {
       fetchNftData();
       fetchGameData();
     }

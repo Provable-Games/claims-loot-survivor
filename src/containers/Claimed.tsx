@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { Button } from "../components/Button";
 import { ChevronIcon, EyeIcon } from "../components/Icons";
 import Confetti from "../components/animations/Confetti";
@@ -9,7 +9,6 @@ import useSyscalls from "../hooks/useSyscalls";
 import { Network } from "../lib/types";
 import { networkConfig } from "../lib/networkConfig";
 import { useAccount, useDisconnect } from "@starknet-react/core";
-import { statsRevealed } from "../lib/utils";
 import RevealAll from "../components/animations/RevealAll";
 import TwitterShareButton from "../components/TwitterShareButton";
 import { useQuery } from "@apollo/client";
@@ -21,7 +20,7 @@ const Claimed = () => {
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
   const {
-    adventurersMetadata,
+    // adventurersMetadata,
     username,
     isRevealingAll,
     setIsRevealingAll,
@@ -29,27 +28,40 @@ const Claimed = () => {
     setClaimed,
     freeGamesData,
     setFreeGamesData,
-    setAdventurersMetadata,
+    // setAdventurersMetadata,
     setAlreadyClaimed,
   } = useUIStore();
+  const [adventurersMetadata, setAdventurersMetadata] = useState([]);
+  const [isFetchingMetadata, setIsFetchingMetadata] = useState(false);
+  const [revealingBatch, setRevealingBatch] = useState<number>(0);
+
   const pageSize = 5;
   const [currentPage, setCurrentPage] = useState(0);
   const [hideRevealed, setHideRevealed] = useState(false);
-  const filteredAdventurers = hideRevealed
-    ? adventurersMetadata.filter((meta) => !statsRevealed(meta))
-    : adventurersMetadata;
-  const filteredFreeGamesData = hideRevealed
-    ? freeGamesData.filter((_, index) => !freeGamesData[index].revealed)
-    : freeGamesData;
-  const totalPages = Math.ceil(filteredAdventurers.length / pageSize);
+  const sortedFreeGamesData = useMemo(() => {
+    return [...freeGamesData].sort((a, b) => {
+      // Convert adventurerId to numbers for comparison
+      const aId = parseInt(a.adventurerId, 10);
+      const bId = parseInt(b.adventurerId, 10);
+      return aId - bId;
+    });
+  }, [freeGamesData]);
+
+  const filteredFreeGamesData = useMemo(() => {
+    return hideRevealed
+      ? sortedFreeGamesData.filter((game) => !game.revealed)
+      : sortedFreeGamesData;
+  }, [hideRevealed, sortedFreeGamesData]);
+
+  const totalPages = Math.ceil(filteredFreeGamesData.length / pageSize);
   const startIndex = currentPage * pageSize;
   const endIndex = startIndex + pageSize;
-  const currentAdventurers = filteredAdventurers.slice(startIndex, endIndex);
   const currentFreeGamesData = filteredFreeGamesData.slice(
     startIndex,
     endIndex
   );
-  const finalPage = currentPage === totalPages - 1;
+
+  const finalPage = currentPage === totalPages - 1 || totalPages === 0;
 
   const network: Network = import.meta.env.VITE_NETWORK;
   const gameAddress = networkConfig[network!].gameAddress;
@@ -63,9 +75,11 @@ const Claimed = () => {
 
   const { executeRevealAll } = useSyscalls();
 
-  const unrevealedGames = freeGamesData.filter((token: any) => !token.revealed);
+  const unrevealedGames = sortedFreeGamesData.filter(
+    (token: any) => !token.revealed
+  );
 
-  const revealedGamesCount = freeGamesData.filter(
+  const revealedGamesCount = sortedFreeGamesData.filter(
     (token: any) => token.revealed
   ).length;
 
@@ -93,27 +107,132 @@ const Claimed = () => {
     }
   }, [address]);
 
-  useEffect(() => {
-    // if (adventurersMetadata.length === 0 && freeGamesData.length > 0) {
-    const fetchImages = async () => {
-      const adventurersMetadata = await Promise.all(
-        freeGamesData.map((freeGame) =>
-          fetchAdventurerMetadata(
+  const fetchPagedImages = useCallback(
+    async (games: any[]) => {
+      setIsFetchingMetadata(true);
+
+      const newAdventurersMetadata = await Promise.all(
+        games.map(async (freeGame) => {
+          const existingMeta = adventurersMetadata.find(
+            (meta) =>
+              meta.name.split("#")[1] === freeGame.adventurerId.toString()
+          );
+          if (existingMeta) return existingMeta;
+          return fetchAdventurerMetadata(
             networkConfig[network!].gameAddress,
             freeGame.adventurerId,
             networkConfig[network!].rpcUrl
-          )
-        )
+          );
+        })
       );
-      setAdventurersMetadata(adventurersMetadata);
-    };
-    fetchImages();
-    // }
-  }, [freeGamesData]);
+
+      setAdventurersMetadata((prevMetadata) => {
+        const updatedMetadata = [...prevMetadata];
+        newAdventurersMetadata.forEach((metadata) => {
+          if (!metadata) return; // Skip if metadata fetch failed
+          const index = updatedMetadata.findIndex(
+            (meta) => meta.name.split("#")[1] === metadata.name.split("#")[1]
+          );
+          if (index !== -1) {
+            updatedMetadata[index] = metadata;
+          } else {
+            updatedMetadata.push(metadata);
+          }
+        });
+        return updatedMetadata;
+      });
+
+      setIsFetchingMetadata(false);
+    },
+    [network, adventurersMetadata]
+  );
+
+  const currentAdventurers = useMemo(() => {
+    return currentFreeGamesData
+      .map((game) => {
+        const adventurerId = game.adventurerId.toString();
+        const meta = adventurersMetadata.find((meta) => {
+          const metaId = meta.name.split("#")[1];
+          return metaId === adventurerId;
+        });
+        return meta ? { ...meta, adventurerId: game.adventurerId } : null;
+      })
+      .filter(Boolean);
+  }, [currentFreeGamesData, adventurersMetadata]);
+
+  const handleHideRevealed = () => {
+    setHideRevealed((prev) => !prev);
+    setCurrentPage(0);
+  };
+
+  useEffect(() => {
+    if (currentPage >= totalPages) {
+      setCurrentPage(Math.max(0, totalPages - 1));
+    }
+  }, [hideRevealed, totalPages, currentPage]);
+
+  useEffect(() => {
+    const missingMetadata = currentFreeGamesData.filter(
+      (game) =>
+        !adventurersMetadata.some(
+          (meta) => meta.name.split("#")[1] === game.adventurerId.toString()
+        )
+    );
+
+    if (missingMetadata.length > 0 && !isFetchingMetadata) {
+      fetchPagedImages(missingMetadata);
+    }
+  }, [
+    currentFreeGamesData,
+    adventurersMetadata,
+    fetchPagedImages,
+    isFetchingMetadata,
+  ]);
+
+  const handleRevealAll = useCallback(async () => {
+    clickPlay();
+    setPreparingReveal(true);
+    await executeRevealAll(gameAddress, unrevealedGames);
+    setPreparingReveal(false);
+    setIsRevealingAll(true);
+    setRevealingBatch(0);
+  }, [clickPlay, executeRevealAll, gameAddress, unrevealedGames]);
+
+  const fetchNextBatch = useCallback(
+    async (batchNumber: number) => {
+      const batchSize = 5;
+      const startIndex = batchNumber * batchSize;
+      const endIndex = startIndex + batchSize;
+      const batchGames = unrevealedGames.slice(startIndex, endIndex);
+
+      if (batchGames.length > 0) {
+        await fetchPagedImages(batchGames);
+      }
+    },
+    [unrevealedGames, fetchPagedImages]
+  );
+
+  useEffect(() => {
+    if (isRevealingAll && revealingBatch * 5 < unrevealedGames.length) {
+      fetchNextBatch(revealingBatch);
+    }
+  }, [isRevealingAll, revealingBatch, unrevealedGames, fetchNextBatch]);
+
+  const handleRevealAnimationProgress = useCallback((revealedCount: number) => {
+    if (revealedCount % 3 === 0) {
+      setRevealingBatch((prev) => prev + 1);
+    }
+  }, []);
 
   return (
-    <div className="min-h-screen w-full flex flex-col justify-between items-center bg-terminal-black sm:pt-8 sm:p-8 lg:p-10 bg-[url('/scenes/fountain.png')] bg-cover bg-center bg-no-repeat">
-      <Confetti />
+    <div
+      className={`min-h-screen w-full flex flex-col justify-between items-center bg-terminal-black sm:pt-8 sm:p-8 lg:p-10 ${
+        freeGamesData.length > 0
+          ? "bg-[url('/scenes/fountain.png')]"
+          : "bg-[url('/scenes/cave.png')]"
+      } bg-cover bg-center bg-no-repeat`}
+    >
+      {freeGamesData.length > 0 && <Confetti />}
       <span className="absolute flex flex-row items-center gap-2 top-20 right-32">
         <p className="text-2xl uppercase">{username}</p>
         <Button
@@ -130,94 +249,146 @@ const Claimed = () => {
           Disconnect
         </Button>
       </span>
-      <div className="relative flex flex-col items-center gap-8">
-        <h1 className="m-0 uppercase text-4xl sm:text-6xl text-center">
-          Claimed Free Games
-        </h1>
-        <span className="absolute top-[60px] text-terminal-green text-xl">
-          ({revealedGamesCount}/{freeGamesData.length} REVEALED)
-        </span>
-        <div className="flex flex-row items-center gap-2">
-          <Button
-            size="lg"
-            variant="token"
-            onClick={async () => {
-              clickPlay();
-              setPreparingReveal(true);
-              await executeRevealAll(gameAddress, unrevealedGames);
-              setPreparingReveal(false);
-              setIsRevealingAll(true);
-            }}
-          >
-            Reveal All
-          </Button>
-          <Button
-            size="lg"
-            variant="contrast"
-            className={`relative flex items-end ${
-              hideRevealed
-                ? "bg-terminal-green text-terminal-black hover:bg-terminal-green"
-                : ""
-            }`}
-            onClick={() => setHideRevealed(!hideRevealed)}
-          >
-            <span className="absolute top-1 text-xs w-6">
-              <EyeIcon />
+      {freeGamesData.length > 0 ? (
+        <>
+          <div className="relative flex flex-col items-center gap-8">
+            <h1 className="m-0 uppercase text-4xl sm:text-6xl text-center">
+              Claimed Free Games
+            </h1>
+            <span className="absolute top-[60px] text-terminal-green text-xl">
+              ({revealedGamesCount}/{sortedFreeGamesData.length} REVEALED)
             </span>
-            {hideRevealed ? "Show Revealed" : "Hide Revealed"}
-          </Button>
-        </div>
-      </div>
-      {!isRevealingAll ? (
-        adventurersMetadata.length > 0 ? (
-          <div className="flex flex-row gap-2">
-            {currentPage > 0 && (
-              <span
-                className="absolute top-1/2 left-10 w-20 rotate-180 cursor-pointer"
-                onClick={() => handleClick(currentPage - 1)}
+            <div className="flex flex-row items-center gap-2">
+              <Button
+                size="lg"
+                variant={unrevealedGames.length === 0 ? "outline" : "token"}
+                onClick={async () => {
+                  handleRevealAll();
+                }}
+                disabled={isRevealingAll || unrevealedGames.length === 0}
               >
-                <ChevronIcon />
-              </span>
-            )}
-            {freeGamesData.length > 0 &&
-              currentAdventurers.map((meta: any, index: any) => (
-                <AdventurerCard
-                  meta={meta}
-                  adventurerId={currentFreeGamesData[index].adventurerId}
-                  key={currentFreeGamesData[index].adventurerId}
-                />
-              ))}
-            {!finalPage && (
-              <span
-                className="absolute top-1/2 right-10 w-20 cursor-pointer"
-                onClick={() => handleClick(currentPage + 1)}
+                Reveal All
+              </Button>
+              <Button
+                size="lg"
+                variant="contrast"
+                className={`relative flex items-end ${
+                  hideRevealed
+                    ? "bg-terminal-green text-terminal-black hover:bg-terminal-green"
+                    : ""
+                }`}
+                onClick={handleHideRevealed}
               >
-                <ChevronIcon />
-              </span>
-            )}
+                <span className="absolute top-1 text-xs w-6">
+                  <EyeIcon />
+                </span>
+                {hideRevealed ? "Show Revealed" : "Hide Revealed"}
+              </Button>
+            </div>
           </div>
-        ) : (
-          <TokenLoader />
-        )
+          {!isRevealingAll ? (
+            !isFetchingMetadata ? (
+              <div className="flex flex-row gap-2">
+                {currentPage > 0 && (
+                  <span
+                    className="absolute top-1/2 left-10 w-20 rotate-180 cursor-pointer"
+                    onClick={() => handleClick(currentPage - 1)}
+                  >
+                    <ChevronIcon />
+                  </span>
+                )}
+                {currentAdventurers.length > 0 ? (
+                  currentAdventurers.map((meta: any, index: any) => (
+                    <AdventurerCard
+                      meta={meta}
+                      adventurerId={currentFreeGamesData[index].adventurerId}
+                      key={currentFreeGamesData[index].adventurerId}
+                    />
+                  ))
+                ) : (
+                  <p className="text-4xl uppercase">It's Quiet Here...</p>
+                )}
+                {!finalPage && (
+                  <span
+                    className="absolute top-1/2 right-10 w-20 cursor-pointer"
+                    onClick={() => handleClick(currentPage + 1)}
+                  >
+                    <ChevronIcon />
+                  </span>
+                )}
+              </div>
+            ) : (
+              <TokenLoader />
+            )
+          ) : (
+            <RevealAll
+              adventurersMetadata={unrevealedGames}
+              interval={3000}
+              onProgress={handleRevealAnimationProgress}
+            />
+          )}
+          <div className="flex flex-col gap-2">
+            <TwitterShareButton
+              text={`🚀 Just claimed 10 FREE adventurers! 🎮🔥\n\nLoot Survivor is running an epic tournament with FREE gas & VRF for a whole week! 😱\n\nPlus, if you've got a qualifying NFT, you can score a full FREE game too! Don't miss out.\n\n@LootSurvivor #airdrop #Web3 #Starknet`}
+            />
+            <Button
+              size="lg"
+              onClick={() => {
+                clickPlay();
+                window.open(
+                  "https://lootsurvivor.io/",
+                  "_blank",
+                  "noopener,noreferrer"
+                );
+              }}
+            >
+              Play
+            </Button>
+          </div>
+        </>
       ) : (
-        <RevealAll adventurersMetadata={currentAdventurers} interval={3000} />
+        <div className="flex items-center justify-center min-h-screen w-full">
+          <div className="flex flex-col items-center justify-center gap-10 bg-terminal-black border border-terminal-green p-10">
+            <h1 className="m-0 uppercase text-4xl sm:text-6xl text-center">
+              No Games Claimed
+            </h1>
+            <div className="flex flex-col gap-5">
+              <span className="flex flex-row justify-between">
+                <p className="text-2xl">
+                  You haven't claimed any free games yet.
+                </p>
+                <Button
+                  onClick={() => {
+                    disconnect();
+                    clickPlay();
+                    setClaimed(false);
+                    setAlreadyClaimed(false);
+                  }}
+                >
+                  Click Here to Claim
+                </Button>
+              </span>
+              <p className="text-2xl">
+                No qualifying tokens? No problem. Click below to jump into the
+                game.
+              </p>
+            </div>
+            <Button
+              size="lg"
+              onClick={() => {
+                clickPlay();
+                window.open(
+                  "https://lootsurvivor.io/",
+                  "_blank",
+                  "noopener,noreferrer"
+                );
+              }}
+            >
+              Play
+            </Button>
+          </div>
+        </div>
       )}
-      <div className="flex flex-col gap-2">
-        <TwitterShareButton text="I just claimed my free games on @lootsurvivorio! 🎉" />
-        <Button
-          size="lg"
-          onClick={() => {
-            clickPlay();
-            window.open(
-              "https://lootsurvivor.io/",
-              "_blank",
-              "noopener,noreferrer"
-            );
-          }}
-        >
-          Play
-        </Button>
-      </div>
     </div>
   );
 };
