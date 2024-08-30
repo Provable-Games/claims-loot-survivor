@@ -124,12 +124,19 @@ const Claim = () => {
     }
   }, [address, connector, hashList]);
 
+  // Effect for fetching NFT data when address changes
   useEffect(() => {
     if (address) {
       fetchNftData();
+    }
+  }, [address]);
+
+  // Separate effect for fetching game data when hashList changes
+  useEffect(() => {
+    if (hashList.length > 0) {
       fetchGameData();
     }
-  }, [address, hashList]);
+  }, [hashList]);
 
   const mergeGameData = useCallback(() => {
     // Create a map to store the count of free games for each hash

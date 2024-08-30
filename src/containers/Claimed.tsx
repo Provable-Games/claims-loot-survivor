@@ -30,7 +30,7 @@ const Claimed = () => {
     setFreeGamesData,
     setAdventurersMetadata,
     setAlreadyClaimed,
-    revealedAllMetadata,
+    skipGameFetch,
   } = useUIStore();
   // const [adventurersMetadata, setAdventurersMetadata] = useState([]);
   const [isFetchingMetadata, setIsFetchingMetadata] = useState(false);
@@ -114,10 +114,10 @@ const Claimed = () => {
   }, [address]);
 
   useEffect(() => {
-    if (address) {
+    if (address && !skipGameFetch) {
       fetchData();
     }
-  }, [address]);
+  }, [address, skipGameFetch]);
 
   const fetchPagedImages = useCallback(
     async (games: any[]) => {
@@ -211,7 +211,7 @@ const Claimed = () => {
     }
   }, [clickPlay, executeRevealAll, gameAddress, unrevealedGames]);
 
-  console.log(revealedAllMetadata);
+  console.log(freeGamesData);
 
   return (
     <div

@@ -24,6 +24,7 @@ const App = () => {
     fetchingMetadata,
     setFetchingMetadata,
     freeGamesData,
+    setSkipGameFetch,
   } = useUIStore();
 
   const { connector } = useConnect();
@@ -52,6 +53,7 @@ const App = () => {
         setAdventurersMetadata(adventurersMetadata);
         setClaiming(false);
         setFetchingMetadata(false);
+        setSkipGameFetch(true);
         setClaimed(true);
       };
       fetchImages();

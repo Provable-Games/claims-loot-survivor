@@ -28,6 +28,8 @@ type State = {
   setIsRevealingAll: (isRevealingAll: boolean) => void;
   alreadyClaimed: boolean;
   setAlreadyClaimed: (alreadyClaimed: boolean) => void;
+  skipGameFetch: boolean;
+  setSkipGameFetch: (skipGameFetch: boolean) => void;
 };
 
 export const useUIStore = create<State>((set) => ({
@@ -57,4 +59,6 @@ export const useUIStore = create<State>((set) => ({
   setIsRevealingAll: (isRevealingAll) => set({ isRevealingAll }),
   alreadyClaimed: false,
   setAlreadyClaimed: (alreadyClaimed) => set({ alreadyClaimed }),
+  skipGameFetch: false,
+  setSkipGameFetch: (skipGameFetch) => set({ skipGameFetch }),
 }));
