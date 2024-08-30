@@ -31,7 +31,6 @@ const Claimed = () => {
     setAdventurersMetadata,
     setAlreadyClaimed,
     revealedAllMetadata,
-    setRevealedAllMetadata,
   } = useUIStore();
   // const [adventurersMetadata, setAdventurersMetadata] = useState([]);
   const [isFetchingMetadata, setIsFetchingMetadata] = useState(false);
