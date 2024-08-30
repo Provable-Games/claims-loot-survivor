@@ -1,14 +1,20 @@
-import { useEffect, useState } from "react";
-import { colorMap } from "../../lib/utils";
+import { useCallback, useEffect, useState } from "react";
+import { colorMap, statsRevealed } from "../../lib/utils";
+import { fetchAdventurerMetadata } from "../../api/fetchMetadata";
+import { networkConfig } from "../../lib/networkConfig";
+import { Network } from "../../lib/types";
+import { useUIStore } from "../../hooks/useUIStore";
 
 interface RevealCardProps {
   adventurerMetadata: any;
+  adventurerId: number;
   isActive: boolean;
   interval?: number;
 }
 
 const RevealCard = ({
   adventurerMetadata,
+  adventurerId,
   isActive,
   interval = 2000,
 }: RevealCardProps) => {
@@ -21,6 +27,26 @@ const RevealCard = ({
     wis: "?",
     cha: "?",
   });
+  const [revealedMetadata, setRevealedMetadata] = useState(null);
+  const network: Network = import.meta.env.VITE_NETWORK;
+  const gameAddress = networkConfig[network!].gameAddress;
+
+  const cardMetadata = revealedMetadata ? revealedMetadata : adventurerMetadata;
+
+  const updateFreeGamesData = useCallback(() => {
+    setFreeGamesData(
+      freeGamesData.map((game) =>
+        game.adventurerId === adventurerId ? { ...game, revealed: true } : game
+      )
+    );
+  }, [adventurerId]);
+
+  const {
+    adventurersMetadata,
+    setAdventurersMetadata,
+    freeGamesData,
+    setFreeGamesData,
+  } = useUIStore();
 
   useEffect(() => {
     if (isActive) {
@@ -44,41 +70,56 @@ const RevealCard = ({
         setRevealedStats(randomStats as typeof revealedStats);
       }, 100);
 
-      // Set final stats and clear interval after 2 seconds
-      const timeoutId = setTimeout(() => {
-        clearInterval(animationInterval);
+      const fetchMetadataRecursive = async () => {
+        const metadata = await fetchAdventurerMetadata(
+          gameAddress,
+          adventurerId,
+          networkConfig[network!].rpcUrl
+        );
 
-        setRevealedStats({
-          str: adventurerMetadata.attributes.find(
-            (attr: any) => attr.trait === "Strength"
-          ).value,
-          dex: adventurerMetadata.attributes.find(
-            (attr: any) => attr.trait === "Dexterity"
-          ).value,
-          int: adventurerMetadata.attributes.find(
-            (attr: any) => attr.trait === "Intelligence"
-          ).value,
-          vit: adventurerMetadata.attributes.find(
-            (attr: any) => attr.trait === "Vitality"
-          ).value,
-          wis: adventurerMetadata.attributes.find(
-            (attr: any) => attr.trait === "Wisdom"
-          ).value,
-          cha: adventurerMetadata.attributes.find(
-            (attr: any) => attr.trait === "Charisma"
-          ).value,
-        });
-
-        setIsRevealing(false);
-      }, interval);
-
-      // Cleanup function
-      return () => {
-        clearInterval(animationInterval);
-        clearTimeout(timeoutId);
+        if (statsRevealed(metadata)) {
+          // Stats are revealed, update the UI
+          clearInterval(animationInterval);
+          setRevealedStats({
+            str: metadata.attributes.find(
+              (attr: any) => attr.trait === "Strength"
+            ).value,
+            dex: metadata.attributes.find(
+              (attr: any) => attr.trait === "Dexterity"
+            ).value,
+            int: metadata.attributes.find(
+              (attr: any) => attr.trait === "Intelligence"
+            ).value,
+            vit: metadata.attributes.find(
+              (attr: any) => attr.trait === "Vitality"
+            ).value,
+            wis: metadata.attributes.find(
+              (attr: any) => attr.trait === "Wisdom"
+            ).value,
+            cha: metadata.attributes.find(
+              (attr: any) => attr.trait === "Charisma"
+            ).value,
+          });
+          const index = adventurersMetadata.findIndex(
+            (meta) => meta.name.split("#")[1] === metadata.name.split("#")[1]
+          );
+          setAdventurersMetadata(
+            adventurersMetadata.map((meta, i) =>
+              i === index ? metadata : meta
+            )
+          );
+          setRevealedMetadata(metadata);
+          updateFreeGamesData();
+          setIsRevealing(false);
+        } else {
+          // Stats are not revealed yet, try again in 4 seconds
+          setTimeout(fetchMetadataRecursive, 4000);
+        }
       };
+
+      fetchMetadataRecursive();
     }
-  }, [isActive, adventurerMetadata, interval]);
+  }, [isActive, adventurerId, interval]);
 
   return (
     <div className="relative flex flex-col bg-black border border-terminal-green border-5 h-full w-full">
@@ -104,9 +145,9 @@ const RevealCard = ({
       </div>
       <div className="relative w-72 h-96">
         <img
-          key={adventurerMetadata.name}
-          src={adventurerMetadata.image}
-          alt={adventurerMetadata.name}
+          key={cardMetadata?.name}
+          src={cardMetadata?.image}
+          alt={cardMetadata?.name}
         />
       </div>
     </div>

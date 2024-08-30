@@ -83,7 +83,6 @@ const useSyscalls = () => {
         token: event.data.collectionAddress,
         tokenId: event.data.tokenId,
         adventurerId: event.data.adventurerId,
-        revealed: false,
       })),
     ];
 
@@ -91,13 +90,13 @@ const useSyscalls = () => {
   };
 
   const executeReveal = async (gameAddress: string, adventurerId: number) => {
-    // if (!account) {
-    //   return;
-    // }
+    if (!account) {
+      return;
+    }
 
-    // if (connector?.id !== "cartridge") {
-    //   return;
-    // }
+    if (connector?.id !== "cartridge") {
+      return;
+    }
 
     await account
       .execute([
@@ -114,13 +113,13 @@ const useSyscalls = () => {
     gameAddress: string,
     unrevealedGames: any[]
   ) => {
-    // if (!account) {
-    //   return;
-    // }
+    if (!account) {
+      return;
+    }
 
-    // if (connector?.id !== "cartridge") {
-    //   return;
-    // }
+    if (connector?.id !== "cartridge") {
+      return;
+    }
 
     const calls = unrevealedGames.map((game) => ({
       contractAddress: gameAddress,
@@ -130,11 +129,11 @@ const useSyscalls = () => {
 
     const tx = await account.execute(calls).catch((e) => console.error(e));
 
-    console.log(tx);
+    const receipt = await provider?.waitForTransaction(
+      (tx as any)?.transaction_hash
+    );
 
-    // const receipt = await provider?.waitForTransaction(tx?.transaction_hash, {
-    //   retryInterval: getWaitRetryInterval(network!),
-    // });
+    console.log(receipt);
   };
 
   return { executeSetDelegate, executeClaim, executeReveal, executeRevealAll };

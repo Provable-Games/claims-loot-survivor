@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "./Button";
 import useSyscalls from "../hooks/useSyscalls";
 import { networkConfig } from "../lib/networkConfig";
-import { AdventurerMetadata, Network } from "../lib/types";
+import { Network } from "../lib/types";
 import { fetchAdventurerMetadata } from "../api/fetchMetadata";
 import { statsRevealed, colorMap } from "../lib/utils";
+import { useUIStore } from "../hooks/useUIStore";
 
 export interface AdventurerCardProps {
   meta: any;
@@ -13,11 +14,13 @@ export interface AdventurerCardProps {
 
 const AdventurerCard = ({ meta, adventurerId }: AdventurerCardProps) => {
   const [isRevealing, setIsRevealing] = useState(false);
-  const [newMetadata, setNewMetadata] = useState<AdventurerMetadata | null>(
-    null
-  );
 
-  const formatMetadata = newMetadata ? newMetadata : meta;
+  const {
+    adventurersMetadata,
+    setAdventurersMetadata,
+    freeGamesData,
+    setFreeGamesData,
+  } = useUIStore();
 
   const [revealedStats, setRevealedStats] = useState({
     str: "?",
@@ -30,6 +33,14 @@ const AdventurerCard = ({ meta, adventurerId }: AdventurerCardProps) => {
   const { executeReveal } = useSyscalls();
   const network: Network = import.meta.env.VITE_NETWORK;
   const gameAddress = networkConfig[network!].gameAddress;
+
+  const updateFreeGamesData = useCallback(() => {
+    setFreeGamesData(
+      freeGamesData.map((game) =>
+        game.adventurerId === adventurerId ? { ...game, revealed: true } : game
+      )
+    );
+  }, [adventurerId]);
 
   const revealStats = async () => {
     setIsRevealing(true);
@@ -74,7 +85,13 @@ const AdventurerCard = ({ meta, adventurerId }: AdventurerCardProps) => {
             (attr: any) => attr.trait === "Charisma"
           ).value,
         });
-        setNewMetadata(metadata);
+        const index = adventurersMetadata.findIndex(
+          (meta) => meta.name.split("#")[1] === metadata.name.split("#")[1]
+        );
+        setAdventurersMetadata(
+          adventurersMetadata.map((meta, i) => (i === index ? metadata : meta))
+        );
+        updateFreeGamesData();
         setIsRevealing(false);
       } else {
         // Stats are not revealed yet, try again in 4 seconds
@@ -87,29 +104,24 @@ const AdventurerCard = ({ meta, adventurerId }: AdventurerCardProps) => {
   };
 
   useEffect(() => {
-    if (statsRevealed(formatMetadata)) {
+    if (statsRevealed(meta)) {
       setRevealedStats({
-        str: formatMetadata.attributes.find(
-          (attr: any) => attr.trait === "Strength"
-        ).value,
-        dex: formatMetadata.attributes.find(
-          (attr: any) => attr.trait === "Dexterity"
-        ).value,
-        int: formatMetadata.attributes.find(
-          (attr: any) => attr.trait === "Intelligence"
-        ).value,
-        vit: formatMetadata.attributes.find(
-          (attr: any) => attr.trait === "Vitality"
-        ).value,
-        wis: formatMetadata.attributes.find(
-          (attr: any) => attr.trait === "Wisdom"
-        ).value,
-        cha: formatMetadata.attributes.find(
-          (attr: any) => attr.trait === "Charisma"
-        ).value,
+        str: meta.attributes.find((attr: any) => attr.trait === "Strength")
+          .value,
+        dex: meta.attributes.find((attr: any) => attr.trait === "Dexterity")
+          .value,
+        int: meta.attributes.find((attr: any) => attr.trait === "Intelligence")
+          .value,
+        vit: meta.attributes.find((attr: any) => attr.trait === "Vitality")
+          .value,
+        wis: meta.attributes.find((attr: any) => attr.trait === "Wisdom").value,
+        cha: meta.attributes.find((attr: any) => attr.trait === "Charisma")
+          .value,
       });
     }
   }, []);
+
+  console.log(isRevealing);
 
   return (
     <div
@@ -156,12 +168,7 @@ const AdventurerCard = ({ meta, adventurerId }: AdventurerCardProps) => {
           </span>
         ))}
       </div>
-      <img
-        key={formatMetadata.name}
-        src={formatMetadata.image}
-        alt={formatMetadata.name}
-        className="w-72"
-      />
+      <img key={meta.name} src={meta.image} alt={meta.name} className="w-72" />
     </div>
   );
 };

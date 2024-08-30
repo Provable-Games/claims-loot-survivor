@@ -81,4 +81,18 @@ const getGamesByGameOwner = gql`
   }
 `;
 
-export { getTokensByNftOwner, getGamesByTokens, getGamesByGameOwner };
+const getClaimedFreeGamesCounts = gql`
+  query GetClaimedFreeGamesCounts($tokens: [HexValue!]) {
+    countClaimedFreeGames(tokens: $tokens) {
+      token
+      count
+    }
+  }
+`;
+
+export {
+  getTokensByNftOwner,
+  getGamesByTokens,
+  getGamesByGameOwner,
+  getClaimedFreeGamesCounts,
+};

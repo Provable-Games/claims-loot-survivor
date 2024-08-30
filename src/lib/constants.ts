@@ -55,26 +55,26 @@ export const collectionsData: CollectionData[] = [
     image: "Influence.png",
   },
   {
-    token: COLLECTION_TOKENS_MAP["The Syndicate"],
+    token: COLLECTION_TOKENS_MAP["TheSyndicate"],
     alt: "The Syndicate",
-    image: "Open-Division.png",
+    image: "The-Syndicate.png",
   },
   {
-    token: [COLLECTION_TOKENS_MAP["Pixel Banners"]],
+    token: COLLECTION_TOKENS_MAP["PixelBanners"],
     alt: "Pixel Banners",
     image: "Pixel-Banners.png",
   },
   {
-    token: [COLLECTION_TOKENS_MAP["Realms"]],
+    token: COLLECTION_TOKENS_MAP["Realms"],
     alt: "Realms",
     image: "Realms.png",
   },
 ];
 
 export const GAMES_PER_TOKEN = {
-  "0x04a79a62dc260f2e9e4b208181b2014c14f3ff44fe7d0e6452a759ed91a106d1": 1,
+  "0x04a79a62dc260f2e9e4b208181b2014c14f3ff44fe7d0e6452a759ed91a106d1": 3,
   "0x07c006181ea9cc7dd1b09c29e9ff23112be30ecfef73b760fabe5bc7ae6ecb44": 1,
-  "0x04efe851716110abeee81b7f22f7964845355ffa32e6833fc3a557a1881721ac": 1,
+  "0x04efe851716110abeee81b7f22f7964845355ffa32e6833fc3a557a1881721ac": 2,
   "0x0377c2d65debb3978ea81904e7d59740da1f07412e30d01c5ded1c5d6f1ddc43": 1,
   "0x07280a807c8b79379bec87919433b7b836b93a92e6d71b24ee99f4ffe33dd337": 1,
   "0x1": 1,
@@ -92,3 +92,5 @@ export const getCollectionAlt = (token: string) => {
 export const SELECTOR_KEYS = {
   ClaimedFreeGame: hash.getSelectorFromName("ClaimedFreeGame"),
 };
+
+export const collectionTotalGames = 1600;

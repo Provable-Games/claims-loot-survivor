@@ -20,7 +20,7 @@ const Claimed = () => {
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
   const {
-    // adventurersMetadata,
+    adventurersMetadata,
     username,
     isRevealingAll,
     setIsRevealingAll,
@@ -28,12 +28,13 @@ const Claimed = () => {
     setClaimed,
     freeGamesData,
     setFreeGamesData,
-    // setAdventurersMetadata,
+    setAdventurersMetadata,
     setAlreadyClaimed,
+    revealedAllMetadata,
+    setRevealedAllMetadata,
   } = useUIStore();
-  const [adventurersMetadata, setAdventurersMetadata] = useState([]);
+  // const [adventurersMetadata, setAdventurersMetadata] = useState([]);
   const [isFetchingMetadata, setIsFetchingMetadata] = useState(false);
-  const [revealingBatch, setRevealingBatch] = useState<number>(0);
 
   const pageSize = 5;
   const [currentPage, setCurrentPage] = useState(0);
@@ -75,9 +76,21 @@ const Claimed = () => {
 
   const { executeRevealAll } = useSyscalls();
 
-  const unrevealedGames = sortedFreeGamesData.filter(
-    (token: any) => !token.revealed
+  const unrevealedGames = useMemo(
+    () => sortedFreeGamesData.filter((token: any) => !token.revealed),
+    [sortedFreeGamesData]
   );
+
+  const unrevealedGamesWithMetadata = useMemo(() => {
+    return unrevealedGames
+      .map((game) => {
+        const metadata = adventurersMetadata.find(
+          (meta) => meta.name.split("#")[1] === game.adventurerId.toString()
+        );
+        return { ...game, metadata };
+      })
+      .filter((game) => game.metadata); // Only include games with metadata
+  }, [unrevealedGames, adventurersMetadata]);
 
   const revealedGamesCount = sortedFreeGamesData.filter(
     (token: any) => token.revealed
@@ -126,21 +139,19 @@ const Claimed = () => {
         })
       );
 
-      setAdventurersMetadata((prevMetadata) => {
-        const updatedMetadata = [...prevMetadata];
-        newAdventurersMetadata.forEach((metadata) => {
-          if (!metadata) return; // Skip if metadata fetch failed
-          const index = updatedMetadata.findIndex(
-            (meta) => meta.name.split("#")[1] === metadata.name.split("#")[1]
-          );
-          if (index !== -1) {
-            updatedMetadata[index] = metadata;
-          } else {
-            updatedMetadata.push(metadata);
-          }
-        });
-        return updatedMetadata;
+      let updatedMetadata = [...adventurersMetadata];
+      newAdventurersMetadata.forEach((metadata) => {
+        if (!metadata) return; // Skip if metadata fetch failed
+        const index = updatedMetadata.findIndex(
+          (meta) => meta.name.split("#")[1] === metadata.name.split("#")[1]
+        );
+        if (index !== -1) {
+          updatedMetadata[index] = metadata;
+        } else {
+          updatedMetadata.push(metadata);
+        }
       });
+      setAdventurersMetadata(updatedMetadata);
 
       setIsFetchingMetadata(false);
     },
@@ -191,38 +202,17 @@ const Claimed = () => {
 
   const handleRevealAll = useCallback(async () => {
     clickPlay();
-    setPreparingReveal(true);
-    await executeRevealAll(gameAddress, unrevealedGames);
-    setPreparingReveal(false);
-    setIsRevealingAll(true);
-    setRevealingBatch(0);
+    try {
+      setPreparingReveal(true);
+      await executeRevealAll(gameAddress, unrevealedGames);
+      setPreparingReveal(false);
+      setIsRevealingAll(true);
+    } catch (e) {
+      console.log(e);
+    }
   }, [clickPlay, executeRevealAll, gameAddress, unrevealedGames]);
 
-  const fetchNextBatch = useCallback(
-    async (batchNumber: number) => {
-      const batchSize = 5;
-      const startIndex = batchNumber * batchSize;
-      const endIndex = startIndex + batchSize;
-      const batchGames = unrevealedGames.slice(startIndex, endIndex);
-
-      if (batchGames.length > 0) {
-        await fetchPagedImages(batchGames);
-      }
-    },
-    [unrevealedGames, fetchPagedImages]
-  );
-
-  useEffect(() => {
-    if (isRevealingAll && revealingBatch * 5 < unrevealedGames.length) {
-      fetchNextBatch(revealingBatch);
-    }
-  }, [isRevealingAll, revealingBatch, unrevealedGames, fetchNextBatch]);
-
-  const handleRevealAnimationProgress = useCallback((revealedCount: number) => {
-    if (revealedCount % 3 === 0) {
-      setRevealingBatch((prev) => prev + 1);
-    }
-  }, []);
+  console.log(revealedAllMetadata);
 
   return (
     <div
@@ -306,7 +296,9 @@ const Claimed = () => {
                     />
                   ))
                 ) : (
-                  <p className="text-4xl uppercase">It's Quiet Here...</p>
+                  <div className="flex items-center justify-center bg-terminal-black border border-terminal-green p-10">
+                    <p className="text-4xl uppercase">It's Quiet Here...</p>
+                  </div>
                 )}
                 {!finalPage && (
                   <span
@@ -322,9 +314,8 @@ const Claimed = () => {
             )
           ) : (
             <RevealAll
-              adventurersMetadata={unrevealedGames}
+              adventurersMetadata={unrevealedGamesWithMetadata}
               interval={3000}
-              onProgress={handleRevealAnimationProgress}
             />
           )}
           <div className="flex flex-col gap-2">

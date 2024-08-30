@@ -4,8 +4,12 @@ import { useUiSounds, soundSelector } from "../hooks/useUISound";
 import { useAccount, useConnect, useDisconnect } from "@starknet-react/core";
 import { getCartridgeConnector, getWalletConnectors } from "../lib/connectors";
 import { CartridgeIcon, CompleteIcon } from "../components/Icons";
-import { collectionsData, GAMES_PER_TOKEN } from "../lib/constants";
-import { displayAddress, padAddress } from "../lib/utils";
+import {
+  collectionsData,
+  GAMES_PER_TOKEN,
+  collectionTotalGames,
+} from "../lib/constants";
+import { displayAddress, indexAddress, padAddress } from "../lib/utils";
 import useSyscalls from "../hooks/useSyscalls";
 import { useUIStore } from "../hooks/useUIStore";
 import { Network } from "../lib/types";
@@ -14,6 +18,7 @@ import { useQuery } from "@apollo/client";
 import {
   getTokensByNftOwner,
   getGamesByTokens,
+  getClaimedFreeGamesCounts,
 } from "../hooks/graphql/queries";
 
 const Claim = () => {
@@ -45,9 +50,12 @@ const Claim = () => {
 
   const walletConnectors = getWalletConnectors(connectors);
 
-  const tokenByOwnerVariables = {
-    ownerAddress: address ? address : "0x0",
-  };
+  const tokenByOwnerVariables = useMemo(
+    () => ({
+      ownerAddress: address ? address : "0x0",
+    }),
+    [address]
+  );
 
   const { refetch: refetchNftOwner } = useQuery(getTokensByNftOwner, {
     variables: tokenByOwnerVariables,
@@ -55,15 +63,45 @@ const Claim = () => {
     fetchPolicy: "network-only",
   });
 
-  const gamesByTokensVariables = {
-    hashList: hashList,
-  };
+  const gamesByTokensVariables = useMemo(
+    () => ({
+      hashList: hashList,
+    }),
+    [hashList]
+  );
 
   const { refetch: refetchGameOwner } = useQuery(getGamesByTokens, {
     variables: gamesByTokensVariables,
     skip: hashList.length === 0,
     fetchPolicy: "network-only",
   });
+
+  const tokens = useMemo(
+    () => collectionsData.map((collection) => indexAddress(collection.token)),
+    []
+  );
+
+  const { data: claimedFreeGamesCountsData } = useQuery(
+    getClaimedFreeGamesCounts,
+    {
+      variables: { tokens },
+      skip: tokens.length === 0,
+      fetchPolicy: "network-only",
+    }
+  );
+
+  console.log(tokens);
+  console.log(collectionsData);
+
+  console.log(claimedFreeGamesCountsData);
+
+  // const claimedCountsMap = useMemo(() => {
+  //   if (!claimedFreeGamesCounts) return {};
+  //   return claimedFreeGamesCounts.claimedFreeGamesCounts.reduce((acc, { token, count }) => {
+  //     acc[token] = count;
+  //     return acc;
+  //   }, {});
+  // }, [claimedFreeGamesCounts]);
 
   const fetchNftData = useCallback(async () => {
     if (connector?.id !== "cartridge") {
@@ -139,6 +177,7 @@ const Claim = () => {
   }, [account, claimedData]);
 
   console.log(freeGamesAvailable);
+  console.log(claimedData);
 
   const handleCartridgeOnboarding = async () => {
     clickPlay();
@@ -225,11 +264,27 @@ const Claim = () => {
     index: number
   ) => {
     const freeGames = getCollectionFreeGames(token);
+    const gamesClaimed =
+      claimedFreeGamesCountsData?.countClaimedFreeGames?.find(
+        (game: any) => game.token === indexAddress(token)
+      ).count;
+    const totalGamesLeft = collectionTotalGames - gamesClaimed;
     return (
       <div
         className="flex flex-col gap-2 items-center justify-center relative"
         key={index}
       >
+        <span
+          className={`w-full absolute top-[-30px] flex flex-row border ${
+            totalGamesLeft > 800
+              ? "border-terminal-green text-terminal-green"
+              : totalGamesLeft > 160
+              ? "border-terminal-yellow text-terminal-yellow"
+              : "border-red-600 text-red-600"
+          } rounded-lg justify-center uppercase`}
+        >
+          {`${totalGamesLeft} Left`}
+        </span>
         {address && (
           <>
             <span className="absolute w-full h-full bg-terminal-black opacity-70 z-10" />
@@ -264,7 +319,7 @@ const Claim = () => {
         <h1 className="m-0 uppercase text-4xl sm:text-6xl text-center">
           Mainnet Tournament Claim
         </h1>
-        <div className="flex flex-col">
+        <div className="flex flex-col gap-10">
           <div className="flex flex-row items-center justify-between">
             <p className="text-2xl uppercase">Collections</p>
             {address && (
@@ -297,7 +352,7 @@ const Claim = () => {
               )
             )}
           </div>
-          <div className="w-full h-[200px] sm:h-[300px] flex flex-col border border-terminal-green items-center justify-center gap-5 p-5 mt-20">
+          <div className="w-full h-[200px] sm:h-[300px] flex flex-col border border-terminal-green items-center justify-center gap-5 p-5 mt-5">
             {!address || alreadyClaimed ? (
               <>
                 <p className="text-2xl uppercase">Check Eligibility</p>

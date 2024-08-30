@@ -16,6 +16,8 @@ type State = {
   setPreparingReveal: (preparingReveal: boolean) => void;
   adventurersMetadata: AdventurerMetadata[];
   setAdventurersMetadata: (metadata: AdventurerMetadata[]) => void;
+  revealedAllMetadata: AdventurerMetadata[];
+  setRevealedAllMetadata: (revealedAllMetadata: AdventurerMetadata[]) => void;
   claimedData: any[];
   setClaimedData: (claimedData: any[]) => void;
   freeGamesData: any[];
@@ -43,6 +45,8 @@ export const useUIStore = create<State>((set) => ({
   setPreparingReveal: (preparingReveal) => set({ preparingReveal }),
   adventurersMetadata: [],
   setAdventurersMetadata: (metadata) => set({ adventurersMetadata: metadata }),
+  revealedAllMetadata: [],
+  setRevealedAllMetadata: (revealedAllMetadata) => set({ revealedAllMetadata }),
   claimedData: [],
   setClaimedData: (claimedData) => set({ claimedData }),
   freeGamesData: [],
