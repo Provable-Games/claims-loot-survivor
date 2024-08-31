@@ -9,7 +9,7 @@ export const networkConfig = {
       "0x012af3b1e79b2c20a61ca4b714851ac446e48208518c655ee61f46b45e87c65c",
     lordsAddress:
       "0x064fd80fcb41d00214430574a0aa19d21cc5d6452aeb4996f31b6e9ba4f466a0",
-    appUrl: "https://claims-sepolia.lootsurvivor.io",
+    appUrl: "https://claims-loot-survivor.vercel.app/",
   },
   mainnet: {
     rpcUrl:

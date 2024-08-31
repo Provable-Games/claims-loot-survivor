@@ -66,6 +66,7 @@ const Claimed = () => {
 
   const network: Network = import.meta.env.VITE_NETWORK;
   const gameAddress = networkConfig[network!].gameAddress;
+  const appUrl = networkConfig[network!].appUrl;
 
   const { play: clickPlay } = useUiSounds(soundSelector.click);
 
@@ -396,7 +397,7 @@ const Claimed = () => {
           )}
           <div className="flex flex-col gap-2">
             <TwitterShareButton
-              text={`🚀 Just claimed 10 FREE adventurers! 🎮🔥\n\nLoot Survivor is running an epic tournament with FREE gas & VRF for a whole week! 😱\n\nPlus, if you've got a qualifying NFT, you can score a full FREE game too! Don't miss out.\n\n@LootSurvivor #airdrop #Web3 #Starknet`}
+              text={`🚀 Just claimed ${freeGamesData.length} FREE adventurers! 🎮\n\nLoot Survivor is running an epic tournament with FREE gas & VRF for a whole week! 😱\n\nIf you've got a qualifying NFT, you can score a full FREE game too! Don't miss out.\n\n${appUrl}\n\n@LootSurvivor #airdrop #Web3 #Starknet`}
             />
             <Button
               size="lg"
