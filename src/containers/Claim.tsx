@@ -3,11 +3,12 @@ import { Button } from "../components/Button";
 import { useUiSounds, soundSelector } from "../hooks/useUISound";
 import { useAccount, useConnect, useDisconnect } from "@starknet-react/core";
 import { getCartridgeConnector, getWalletConnectors } from "../lib/connectors";
-import { CartridgeIcon, CompleteIcon } from "../components/Icons";
+import { CartridgeIcon, CompleteIcon, OutIcon } from "../components/Icons";
 import {
   collectionsData,
   GAMES_PER_TOKEN,
   collectionTotalGames,
+  maxFreeGames,
 } from "../lib/constants";
 import { displayAddress, indexAddress, padAddress } from "../lib/utils";
 import useSyscalls from "../hooks/useSyscalls";
@@ -90,6 +91,15 @@ const Claim = () => {
       fetchPolicy: "network-only",
     }
   );
+
+  const totalFreeGames = useMemo(() => {
+    return claimedFreeGamesCountsData?.countClaimedFreeGames?.reduce(
+      (sum, token) => sum + token.count,
+      0
+    );
+  }, [claimedFreeGamesCountsData]);
+
+  const mintedOut = totalFreeGames >= maxFreeGames;
 
   const fetchNftData = useCallback(async () => {
     if (connector?.id !== "cartridge") {
@@ -260,12 +270,25 @@ const Claim = () => {
       claimedFreeGamesCountsData?.countClaimedFreeGames?.find(
         (game: any) => game.token === indexAddress(token)
       ).count;
-    const totalGamesLeft = collectionTotalGames - gamesClaimed;
+    const tokenGameCount = GAMES_PER_TOKEN[token];
+    const maxTokens = Math.floor(collectionTotalGames / tokenGameCount);
+    const totalGamesLeft = maxTokens - Math.ceil(gamesClaimed / tokenGameCount);
+    const isMintedOut = totalGamesLeft <= 0;
     return (
       <div
         className="flex flex-col gap-2 items-center justify-center relative"
         key={index}
       >
+        {isMintedOut && (
+          <>
+            <span className="absolute w-full h-full bg-terminal-black opacity-50 z-10" />
+            <span className="absolute w-full h-full z-20">
+              <span className="text-red-800 w-1/2 h-1/2">
+                <OutIcon />
+              </span>
+            </span>
+          </>
+        )}
         <span
           className={`w-full absolute top-[-30px] flex flex-row border ${
             totalGamesLeft > 800
@@ -275,16 +298,14 @@ const Claim = () => {
               : "border-red-600 text-red-600"
           } rounded-lg justify-center uppercase`}
         >
-          {`${totalGamesLeft} Left`}
+          {isMintedOut ? "Minted Out" : `${totalGamesLeft} Left`}
         </span>
-        {address && (
+        {address && !isMintedOut && freeGames > 0 && (
           <>
             <span className="absolute w-full h-full bg-terminal-black opacity-70 z-10" />
-            {freeGames > 0 && (
-              <span className="absolute w-1/2 z-20">
-                <CompleteIcon />
-              </span>
-            )}
+            <span className="absolute w-1/2 z-20">
+              <CompleteIcon />
+            </span>
           </>
         )}
         <span className="relative h-20 w-20 border border-terminal-green">
@@ -347,25 +368,48 @@ const Claim = () => {
           <div className="w-full h-[200px] sm:h-[300px] flex flex-col border border-terminal-green items-center justify-center gap-5 p-5 mt-5">
             {!address || alreadyClaimed ? (
               <>
-                <p className="text-2xl uppercase">Check Eligibility</p>
-                {!alreadyClaimed ? (
-                  <div className="hidden sm:flex flex-row gap-2">
-                    {walletConnectors.map((connector, index) => (
-                      <Button
-                        size={"lg"}
-                        disabled={address !== undefined}
-                        onClick={() => {
-                          disconnect();
-                          connect({ connector });
-                        }}
-                        key={index}
-                      >
-                        {`Login With ${connector.id}`}
-                      </Button>
-                    ))}
+                {mintedOut ? (
+                  <div className="flex flex-col items-center justify-center gap-5">
+                    <p className="text-4xl uppercase text-red-600">
+                      Minted Out
+                    </p>
+                    <Button
+                      size={"lg"}
+                      onClick={() => {
+                        clickPlay();
+                        window.open(
+                          "https://sepolia.lootsurvivor.io/",
+                          "_blank",
+                          "noopener,noreferrer"
+                        );
+                      }}
+                    >
+                      Join The Fun
+                    </Button>
                   </div>
                 ) : (
-                  <p>ALREADY CLAIMED</p>
+                  <>
+                    <p className="text-2xl uppercase">Check Eligibility</p>
+                    {!alreadyClaimed ? (
+                      <div className="hidden sm:flex flex-row gap-2">
+                        {walletConnectors.map((connector, index) => (
+                          <Button
+                            size={"lg"}
+                            disabled={address !== undefined}
+                            onClick={() => {
+                              disconnect();
+                              connect({ connector });
+                            }}
+                            key={index}
+                          >
+                            {`Login With ${connector.id}`}
+                          </Button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p>ALREADY CLAIMED</p>
+                    )}
+                  </>
                 )}
                 <p className="hidden sm:block text-2xl uppercase">
                   Already Claimed?

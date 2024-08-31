@@ -94,3 +94,4 @@ export const SELECTOR_KEYS = {
 };
 
 export const collectionTotalGames = 1600;
+export const maxFreeGames = 12796; // (1600 * 8) - 4 = 12796 (minus the extra ducks)
