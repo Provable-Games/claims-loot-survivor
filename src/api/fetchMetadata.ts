@@ -34,8 +34,6 @@ export const fetchAdventurerMetadata = async (
     console.error("Error in response:", data);
   }
 
-  console.log(data);
-
   // Step 1: Convert hex strings to a single string
   const hexString = data.result.slice(1).join("").slice(2); // Remove '0x' prefix
 

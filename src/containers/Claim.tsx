@@ -90,19 +90,6 @@ const Claim = () => {
     }
   );
 
-  console.log(tokens);
-  console.log(collectionsData);
-
-  console.log(claimedFreeGamesCountsData);
-
-  // const claimedCountsMap = useMemo(() => {
-  //   if (!claimedFreeGamesCounts) return {};
-  //   return claimedFreeGamesCounts.claimedFreeGamesCounts.reduce((acc, { token, count }) => {
-  //     acc[token] = count;
-  //     return acc;
-  //   }, {});
-  // }, [claimedFreeGamesCounts]);
-
   const fetchNftData = useCallback(async () => {
     if (connector?.id !== "cartridge") {
       const data: any = await refetchNftOwner({
@@ -182,9 +169,6 @@ const Claim = () => {
       setAlreadyClaimed(true);
     }
   }, [account, claimedData]);
-
-  console.log(freeGamesAvailable);
-  console.log(claimedData);
 
   const handleCartridgeOnboarding = async () => {
     clickPlay();
@@ -445,7 +429,19 @@ const Claim = () => {
                   </Button>
                 ) : (
                   <span className="flex items-center justify-center">
-                    <Button className="w-1/4">Play</Button>
+                    <Button
+                      className="w-1/4"
+                      onClick={() => {
+                        clickPlay();
+                        window.open(
+                          "https://sepolia.lootsurvivor.io/",
+                          "_blank",
+                          "noopener,noreferrer"
+                        );
+                      }}
+                    >
+                      Play
+                    </Button>
                   </span>
                 )}
               </div>

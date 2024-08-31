@@ -31,8 +31,6 @@ const App = () => {
 
   const network: Network = import.meta.env.VITE_NETWORK;
 
-  // console.log(claimedData);
-
   useEffect(() => {
     if (
       freeGamesData.length > 0 &&
@@ -49,7 +47,6 @@ const App = () => {
             )
           )
         );
-        console.log(adventurersMetadata);
         setAdventurersMetadata(adventurersMetadata);
         setClaiming(false);
         setFetchingMetadata(false);

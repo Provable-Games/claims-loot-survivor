@@ -27,8 +27,6 @@ const useSyscalls = () => {
       return;
     }
 
-    console.log(account);
-
     await account
       .execute([
         {
@@ -129,11 +127,7 @@ const useSyscalls = () => {
 
     const tx = await account.execute(calls).catch((e) => console.error(e));
 
-    const receipt = await provider?.waitForTransaction(
-      (tx as any)?.transaction_hash
-    );
-
-    console.log(receipt);
+    await provider?.waitForTransaction((tx as any)?.transaction_hash);
   };
 
   return { executeSetDelegate, executeClaim, executeReveal, executeRevealAll };

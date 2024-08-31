@@ -121,8 +121,6 @@ const AdventurerCard = ({ meta, adventurerId }: AdventurerCardProps) => {
     }
   }, []);
 
-  console.log(isRevealing);
-
   return (
     <div
       className={`relative flex flex-col bg-black border border-terminal-green border-5 sm:w-[200px] 2xl:w-[275px] 3xl:w-[350px]`}

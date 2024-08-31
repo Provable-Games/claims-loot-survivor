@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import RevealCard from "./RevealCard";
 import { useUIStore } from "../../hooks/useUIStore";
+import { Button } from "../Button";
 
 interface RevealAllProps {
   adventurersMetadata: any[];
@@ -38,12 +39,19 @@ const RevealAll = ({
   }, [interval, adventurersMetadata.length, setIsRevealingAll]);
 
   return (
-    <div className="flex relative w-72 h-[480px]">
+    <div className="absolute inset-0 w-full min-h-screen z-20">
+      <Button
+        className="absolute top-1/2 right-40 transform -translate-y-1/2"
+        onClick={() => setIsRevealingAll(false)}
+        size="xl"
+      >
+        Skip
+      </Button>
       {adventurersMetadata.map((adventurer, index) => (
         <div
           key={adventurer.name}
           className={`
-            absolute left-1/2 top-1/2 w-full h-full
+            absolute left-1/2 top-1/2
             transform -translate-x-1/2 -translate-y-1/2
             transition-all duration-500 ease-in-out
             ${
@@ -54,7 +62,6 @@ const RevealAll = ({
         >
           <RevealCard
             adventurerMetadata={adventurer}
-            adventurerId={adventurer.name.split("#")[1]}
             isActive={index === currentIndex}
             interval={2000}
           />

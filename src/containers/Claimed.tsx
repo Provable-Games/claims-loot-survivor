@@ -15,6 +15,7 @@ import { useQuery } from "@apollo/client";
 import { getGamesByGameOwner } from "../hooks/graphql/queries";
 import { fetchAdventurerMetadata } from "../api/fetchMetadata";
 import TokenLoader from "../components/animations/TokenLoader";
+import { statsRevealed } from "../lib/utils";
 
 const Claimed = () => {
   const { address } = useAccount();
@@ -32,7 +33,8 @@ const Claimed = () => {
     setAlreadyClaimed,
     skipGameFetch,
   } = useUIStore();
-  // const [adventurersMetadata, setAdventurersMetadata] = useState([]);
+  const [unrevealedGamesWithMetadata, setUnrevealedGamesWithMetadata] =
+    useState([]);
   const [isFetchingMetadata, setIsFetchingMetadata] = useState(false);
 
   const pageSize = 5;
@@ -80,16 +82,90 @@ const Claimed = () => {
     [sortedFreeGamesData]
   );
 
-  const unrevealedGamesWithMetadata = useMemo(() => {
-    return unrevealedGames
-      .map((game) => {
-        const metadata = adventurersMetadata.find(
-          (meta) => meta.name.split("#")[1] === game.adventurerId.toString()
+  const fetchAllMetadata = useCallback(async () => {
+    setIsFetchingMetadata(true);
+    try {
+      // First, check if the stats for the first unrevealed game have been revealed
+      const checkStatsRevealed = async () => {
+        if (unrevealedGames.length === 0) return;
+
+        const firstGame = unrevealedGames[0];
+        const metadata = await fetchAdventurerMetadata(
+          networkConfig[network!].gameAddress,
+          firstGame.adventurerId,
+          networkConfig[network!].rpcUrl
         );
-        return { ...game, metadata };
-      })
-      .filter((game) => game.metadata); // Only include games with metadata
-  }, [unrevealedGames, adventurersMetadata]);
+
+        if (!statsRevealed(metadata)) {
+          // If stats are not revealed, wait and check again
+          await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait for 3 seconds
+          await checkStatsRevealed();
+        }
+      };
+
+      await checkStatsRevealed();
+
+      const chunkSize = 5;
+      const delayBetweenChunks = 1000; // 1 second delay, adjust as needed
+
+      for (let i = 0; i < unrevealedGames.length; i += chunkSize) {
+        const gameChunk = unrevealedGames.slice(i, i + chunkSize);
+        const chunkMetadata = await Promise.all(
+          gameChunk.map((game) =>
+            fetchAdventurerMetadata(
+              networkConfig[network!].gameAddress,
+              game.adventurerId,
+              networkConfig[network!].rpcUrl
+            )
+          )
+        );
+
+        // Update metadata after each chunk
+        const updatedMetadata = [...adventurersMetadata];
+        chunkMetadata.forEach((metadata) => {
+          if (!metadata) return; // Skip if metadata fetch failed
+          const index = updatedMetadata.findIndex(
+            (meta) => meta.name.split("#")[1] === metadata.name.split("#")[1]
+          );
+          if (index !== -1) {
+            updatedMetadata[index] = metadata;
+          } else {
+            updatedMetadata.push(metadata);
+          }
+        });
+        setAdventurersMetadata(updatedMetadata);
+
+        setUnrevealedGamesWithMetadata((prev) => [
+          ...prev,
+          ...chunkMetadata.filter(Boolean),
+        ]);
+
+        // Delay between chunks, but not after the last chunk
+        if (i + chunkSize < unrevealedGames.length) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, delayBetweenChunks)
+          );
+        }
+      }
+      setFreeGamesData(
+        freeGamesData.map((game) => ({
+          ...game,
+          revealed: true,
+        }))
+      );
+    } catch (error) {
+      console.error("Error fetching metadata:", error);
+    } finally {
+      setIsFetchingMetadata(false);
+      setIsRevealingAll(false);
+    }
+  }, [
+    unrevealedGames,
+    network,
+    setAdventurersMetadata,
+    setFreeGamesData,
+    setIsRevealingAll,
+  ]);
 
   const revealedGamesCount = sortedFreeGamesData.filter(
     (token: any) => token.revealed
@@ -204,14 +280,14 @@ const Claimed = () => {
     try {
       setPreparingReveal(true);
       await executeRevealAll(gameAddress, unrevealedGames);
+      await fetchAllMetadata();
       setPreparingReveal(false);
       setIsRevealingAll(true);
     } catch (e) {
       console.log(e);
+      setIsRevealingAll(false);
     }
   }, [clickPlay, executeRevealAll, gameAddress, unrevealedGames]);
-
-  console.log(freeGamesData);
 
   return (
     <div
@@ -222,6 +298,9 @@ const Claimed = () => {
       } bg-cover bg-center bg-no-repeat`}
     >
       {freeGamesData.length > 0 && <Confetti />}
+      {isRevealingAll && (
+        <span className="absolute top-0 left-0 w-full h-full bg-black/75 z-10" />
+      )}
       <span className="absolute flex flex-row items-center gap-2 top-20 right-32">
         <p className="text-2xl uppercase">{username}</p>
         <Button
@@ -326,7 +405,7 @@ const Claimed = () => {
               onClick={() => {
                 clickPlay();
                 window.open(
-                  "https://lootsurvivor.io/",
+                  "https://sepolia.lootsurvivor.io/",
                   "_blank",
                   "noopener,noreferrer"
                 );
@@ -368,7 +447,7 @@ const Claimed = () => {
               onClick={() => {
                 clickPlay();
                 window.open(
-                  "https://lootsurvivor.io/",
+                  "https://sepolia.lootsurvivor.io/",
                   "_blank",
                   "noopener,noreferrer"
                 );
