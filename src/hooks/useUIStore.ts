@@ -1,9 +1,7 @@
 import { create } from "zustand";
-import { AdventurerMetadata, Network } from "../lib/types";
+import { AdventurerMetadata } from "../lib/types";
 
 type State = {
-  network: Network;
-  setNetwork: (network: Network) => void;
   claimed: boolean;
   setClaimed: (claimed: boolean) => void;
   claiming: boolean;
@@ -30,11 +28,10 @@ type State = {
   setAlreadyClaimed: (alreadyClaimed: boolean) => void;
   skipGameFetch: boolean;
   setSkipGameFetch: (skipGameFetch: boolean) => void;
+  resetAllState: () => void;
 };
 
 export const useUIStore = create<State>((set) => ({
-  network: undefined,
-  setNetwork: (network) => set({ network }),
   claimed: false,
   setClaimed: (claimed) => set({ claimed }),
   claiming: false,
@@ -61,4 +58,20 @@ export const useUIStore = create<State>((set) => ({
   setAlreadyClaimed: (alreadyClaimed) => set({ alreadyClaimed }),
   skipGameFetch: false,
   setSkipGameFetch: (skipGameFetch) => set({ skipGameFetch }),
+  resetAllState: () =>
+    set({
+      claimed: false,
+      claiming: false,
+      fetchingMetadata: false,
+      preparingClaim: false,
+      preparingReveal: false,
+      adventurersMetadata: [],
+      revealedAllMetadata: [],
+      claimedData: [],
+      freeGamesData: [],
+      username: "",
+      isRevealingAll: false,
+      alreadyClaimed: false,
+      skipGameFetch: false,
+    }),
 }));

@@ -40,6 +40,7 @@ const Claim = () => {
     setAlreadyClaimed,
     freeGamesData,
     setFreeGamesData,
+    resetAllState,
   } = useUIStore();
 
   const { connectors, connect, connector } = useConnect();
@@ -324,7 +325,7 @@ const Claim = () => {
                   onClick={() => {
                     disconnect();
                     clickPlay();
-                    setAlreadyClaimed(false);
+                    resetAllState();
                   }}
                   className="h-8"
                 >

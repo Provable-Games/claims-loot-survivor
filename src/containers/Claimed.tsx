@@ -26,12 +26,11 @@ const Claimed = () => {
     isRevealingAll,
     setIsRevealingAll,
     setPreparingReveal,
-    setClaimed,
     freeGamesData,
     setFreeGamesData,
     setAdventurersMetadata,
-    setAlreadyClaimed,
     skipGameFetch,
+    resetAllState,
   } = useUIStore();
   const [unrevealedGamesWithMetadata, setUnrevealedGamesWithMetadata] =
     useState([]);
@@ -309,8 +308,7 @@ const Claimed = () => {
           onClick={() => {
             disconnect();
             clickPlay();
-            setClaimed(false);
-            setAlreadyClaimed(false);
+            resetAllState();
           }}
           className="h-8"
         >
@@ -430,8 +428,7 @@ const Claimed = () => {
                   onClick={() => {
                     disconnect();
                     clickPlay();
-                    setClaimed(false);
-                    setAlreadyClaimed(false);
+                    resetAllState();
                   }}
                 >
                   Click Here to Claim
