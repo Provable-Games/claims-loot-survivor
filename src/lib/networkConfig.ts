@@ -10,6 +10,7 @@ export const networkConfig = {
     lordsAddress:
       "0x064fd80fcb41d00214430574a0aa19d21cc5d6452aeb4996f31b6e9ba4f466a0",
     appUrl: "https://claims-loot-survivor.vercel.app/",
+    blockExplorerUrl: "https://sepolia.voyager.online/",
   },
   mainnet: {
     rpcUrl:
@@ -22,5 +23,6 @@ export const networkConfig = {
     lordsAddress:
       "0x072599086bffce6593a2e08169c21d23564f08be1e1d0b8e05a9768f20469a3f",
     appUrl: "https://claims.lootsurvivor.io/",
+    blockExplorerUrl: "https://voyager.online/",
   },
 };

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, useMemo } from "react";
 import { Button } from "../components/Button";
-import { ChevronIcon, EyeIcon } from "../components/Icons";
+import { CartridgeIcon, ChevronIcon, EyeIcon } from "../components/Icons";
 import Confetti from "../components/animations/Confetti";
 import { useUiSounds, soundSelector } from "../hooks/useUISound";
 import AdventurerCard from "../components/AdventurerCard";
@@ -301,8 +301,23 @@ const Claimed = () => {
       {isRevealingAll && (
         <span className="absolute top-0 left-0 w-full h-full bg-black/75 z-10" />
       )}
-      <span className="absolute flex flex-row items-center gap-2 top-20 right-32">
-        <p className="text-2xl uppercase">{username}</p>
+      <span className="absolute flex flex-row items-center gap-10 top-20 right-32">
+        <div
+          className="relative cursor-pointer"
+          onClick={() => {
+            clickPlay();
+            window.open(
+              `${networkConfig[network!].blockExplorerUrl}contract/${address}`,
+              "_blank",
+              "noopener,noreferrer"
+            );
+          }}
+        >
+          <p className="text-2xl uppercase">{username}</p>
+          <div className="absolute top-[-20px] right-[-20px] w-8 h-8 fill-current">
+            <CartridgeIcon />
+          </div>
+        </div>
         <Button
           size={"xs"}
           disabled={address === undefined}
