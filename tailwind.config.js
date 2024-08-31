@@ -37,6 +37,9 @@ export default {
           '100%': { transform: 'translateX(-200%) translateY(-50%) scale(0.8)', opacity: '0' },
         },
       },
+      screens: {
+        '3xl': '2000px',
+      },
     },
   },
   plugins: [],

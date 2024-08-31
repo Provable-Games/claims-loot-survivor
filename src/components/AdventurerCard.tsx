@@ -125,7 +125,7 @@ const AdventurerCard = ({ meta, adventurerId }: AdventurerCardProps) => {
 
   return (
     <div
-      className={`relative flex flex-col bg-black border border-terminal-green border-5`}
+      className={`relative flex flex-col bg-black border border-terminal-green border-5 sm:w-[200px] 2xl:w-[275px] 3xl:w-[350px]`}
     >
       {(Object.values(revealedStats).every((stat) => stat === "?") ||
         isRevealing) && (
@@ -161,14 +161,19 @@ const AdventurerCard = ({ meta, adventurerId }: AdventurerCardProps) => {
                     parseInt(revealedStats[stat as keyof typeof revealedStats]),
                     isRevealing
                   )
-            } w-12 flex flex-col text-center`}
+            } w-full flex flex-col text-center`}
           >
             <p>{stat.toUpperCase()}</p>
             <p>{revealedStats[stat as keyof typeof revealedStats]}</p>
           </span>
         ))}
       </div>
-      <img key={meta.name} src={meta.image} alt={meta.name} className="w-72" />
+      <img
+        key={meta.name}
+        src={meta.image}
+        alt={meta.name}
+        className="w-full"
+      />
     </div>
   );
 };
