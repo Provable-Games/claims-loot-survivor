@@ -1,6 +1,6 @@
 import useSound from "use-sound";
 
-const dir = "/music/ui/";
+const dir = "/music/";
 
 export const soundSelector = {
   click: "beep.wav",
