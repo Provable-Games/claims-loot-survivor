@@ -67,3 +67,10 @@ input[type="text"] {
   display          : inline-block;
   background-repeat: no-repeat;
 }
+
+@layer components {
+  .loading-ellipsis::after {
+    content  : "";
+    animation: ellipsis 1s infinite;
+  }
+}

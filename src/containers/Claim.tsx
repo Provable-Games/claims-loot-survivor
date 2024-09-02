@@ -28,6 +28,8 @@ const Claim = () => {
   const [claimedGames, setClaimedGames] = useState([]);
   const [selectSkip, setSelectSkip] = useState(false);
   const [hashList, setHashList] = useState([]);
+  const [nftDataFetched, setNftDataFetched] = useState(false);
+  const [gameDataFetched, setGameDataFetched] = useState(false);
   const { play: clickPlay } = useUiSounds(soundSelector.click);
   const {
     setClaiming,
@@ -109,6 +111,7 @@ const Claim = () => {
       const tokensData = data ? data.data.tokens : [];
       setClaimedData(tokensData);
       setHashList(tokensData.map((token: any) => token.hash));
+      setNftDataFetched(true);
     }
   }, [address, connector]);
 
@@ -119,6 +122,7 @@ const Claim = () => {
       });
       const tokensData = data ? data.data.claimedFreeGames : [];
       setFreeGamesData(tokensData);
+      setGameDataFetched(true);
     }
   }, [address, connector, hashList]);
 
@@ -137,6 +141,9 @@ const Claim = () => {
   }, [hashList]);
 
   const mergeGameData = useCallback(() => {
+    if (!nftDataFetched || !gameDataFetched) {
+      return null;
+    }
     // Create a map to store the count of free games for each hash
     const freeGameCountMap: { [hash: string]: number } = {};
     freeGamesData.forEach((freeGame: any) => {
@@ -158,10 +165,13 @@ const Claim = () => {
     });
 
     return mergedData;
-  }, [claimedData, freeGamesData]);
+  }, [nftDataFetched && gameDataFetched]);
 
   const { freeGamesAvailable, totalFreeGamesAvailable } = useMemo(() => {
     const mergedData = mergeGameData();
+    if (mergedData === null) {
+      return { freeGamesAvailable: null, totalFreeGamesAvailable: null };
+    }
     const availableTokens = mergedData.filter(
       (token: any) => token.freeGamesAvailable > 0
     );
@@ -176,10 +186,14 @@ const Claim = () => {
   }, [mergeGameData]);
 
   useEffect(() => {
-    if (account && claimedData.length > 0 && freeGamesAvailable.length === 0) {
-      setAlreadyClaimed(true);
+    if (account && claimedData.length > 0 && freeGamesAvailable !== null) {
+      if (freeGamesAvailable.length === 0) {
+        setAlreadyClaimed(true);
+      } else {
+        setAlreadyClaimed(false);
+      }
     }
-  }, [account, claimedData]);
+  }, [account, claimedData, freeGamesAvailable]);
 
   const handleCartridgeOnboarding = async () => {
     clickPlay();
@@ -254,6 +268,9 @@ const Claim = () => {
   }, [connector, account]);
 
   const getCollectionFreeGames = (token: string) => {
+    if (freeGamesAvailable === null) {
+      return null; // Return null if data hasn't been fetched yet
+    }
     return freeGamesAvailable
       .filter((game) => padAddress(game.token) === token)
       .reduce((sum, token) => sum + token.freeGamesAvailable, 0);
@@ -266,10 +283,11 @@ const Claim = () => {
     index: number
   ) => {
     const freeGames = getCollectionFreeGames(token);
-    const gamesClaimed =
-      claimedFreeGamesCountsData?.countClaimedFreeGames?.find(
-        (game: any) => game.token === indexAddress(token)
-      ).count;
+    const gamesClaimed = claimedFreeGamesCountsData
+      ? claimedFreeGamesCountsData?.countClaimedFreeGames?.find(
+          (game: any) => game.token === indexAddress(token)
+        ).count
+      : undefined;
     const tokenGameCount = GAMES_PER_TOKEN[token];
     const maxTokens = Math.floor(collectionTotalGames / tokenGameCount);
     const totalGamesLeft = maxTokens - Math.ceil(gamesClaimed / tokenGameCount);
@@ -289,17 +307,21 @@ const Claim = () => {
             </span>
           </>
         )}
-        <span
-          className={`w-full absolute top-[-30px] flex flex-row border ${
-            totalGamesLeft > 800
-              ? "border-terminal-green text-terminal-green"
-              : totalGamesLeft > 160
-              ? "border-terminal-yellow text-terminal-yellow"
-              : "border-red-600 text-red-600"
-          } rounded-lg justify-center uppercase`}
-        >
-          {isMintedOut ? "Minted Out" : `${totalGamesLeft} Left`}
-        </span>
+        {claimedFreeGamesCountsData ? (
+          <span
+            className={`w-full absolute top-[-30px] flex flex-row border ${
+              totalGamesLeft > 800
+                ? "border-terminal-green text-terminal-green"
+                : totalGamesLeft > 160
+                ? "border-terminal-yellow text-terminal-yellow"
+                : "border-red-600 text-red-600"
+            } rounded-lg justify-center uppercase`}
+          >
+            {isMintedOut ? "Minted Out" : `${totalGamesLeft} Left`}
+          </span>
+        ) : (
+          <></>
+        )}
         {address && !isMintedOut && freeGames > 0 && (
           <>
             <span className="absolute w-full h-full bg-terminal-black opacity-70 z-10" />
@@ -347,6 +369,8 @@ const Claim = () => {
                     disconnect();
                     clickPlay();
                     resetAllState();
+                    setNftDataFetched(false);
+                    setGameDataFetched(false);
                   }}
                   className="h-8"
                 >
@@ -366,7 +390,11 @@ const Claim = () => {
             )}
           </div>
           <div className="w-full h-[200px] sm:h-[300px] flex flex-col border border-terminal-green items-center justify-center gap-5 p-5 mt-5">
-            {!address || alreadyClaimed ? (
+            {!address ||
+            alreadyClaimed ||
+            !claimedData ||
+            !nftDataFetched ||
+            !gameDataFetched ? (
               <>
                 {mintedOut ? (
                   <div className="flex flex-col items-center justify-center gap-5">
@@ -389,31 +417,45 @@ const Claim = () => {
                   </div>
                 ) : (
                   <>
-                    <p className="text-2xl uppercase">Check Eligibility</p>
-                    {!alreadyClaimed ? (
-                      <div className="hidden sm:flex flex-row gap-2">
-                        {walletConnectors.map((connector, index) => (
-                          <Button
-                            size={"lg"}
-                            disabled={address !== undefined}
-                            onClick={() => {
-                              disconnect();
-                              connect({ connector });
-                            }}
-                            key={index}
-                          >
-                            {`Login With ${connector.id}`}
-                          </Button>
-                        ))}
-                      </div>
+                    {address && (!nftDataFetched || !gameDataFetched) ? (
+                      <p className="uppercase loading-ellipsis">Loading</p>
                     ) : (
-                      <p>ALREADY CLAIMED</p>
+                      <>
+                        {!alreadyClaimed ? (
+                          <>
+                            <p className="uppercase text-2xl">
+                              Check Eligibility
+                            </p>
+                            <div className="hidden sm:flex flex-row gap-2">
+                              {walletConnectors.map((connector, index) => (
+                                <Button
+                                  size={"lg"}
+                                  disabled={address !== undefined}
+                                  onClick={() => {
+                                    disconnect();
+                                    connect({ connector });
+                                  }}
+                                  key={index}
+                                >
+                                  {`Login With ${connector.id}`}
+                                </Button>
+                              ))}
+                            </div>
+                          </>
+                        ) : (
+                          <p className="uppercase text-4xl mb-5">
+                            You have Already Claimed
+                          </p>
+                        )}
+                      </>
                     )}
                   </>
                 )}
-                <p className="hidden sm:block text-2xl uppercase">
-                  Already Claimed?
-                </p>
+                {!alreadyClaimed && (
+                  <p className="hidden sm:block text-2xl uppercase">
+                    Already Claimed?
+                  </p>
+                )}
                 <div className="hidden sm:flex flex-row gap-2">
                   <Button
                     size={"lg"}

@@ -44,7 +44,7 @@ const Claimed = () => {
       // Convert adventurerId to numbers for comparison
       const aId = parseInt(a.adventurerId, 10);
       const bId = parseInt(b.adventurerId, 10);
-      return aId - bId;
+      return bId - aId;
     });
   }, [freeGamesData]);
 
@@ -121,19 +121,21 @@ const Claimed = () => {
         );
 
         // Update metadata after each chunk
-        const updatedMetadata = [...adventurersMetadata];
         chunkMetadata.forEach((metadata) => {
           if (!metadata) return; // Skip if metadata fetch failed
-          const index = updatedMetadata.findIndex(
-            (meta) => meta.name.split("#")[1] === metadata.name.split("#")[1]
-          );
-          if (index !== -1) {
-            updatedMetadata[index] = metadata;
-          } else {
-            updatedMetadata.push(metadata);
-          }
+          setAdventurersMetadata((prevMetadata) => {
+            const updatedMetadata = [...prevMetadata];
+            const index = updatedMetadata.findIndex(
+              (meta) => meta.name.split("#")[1] === metadata.name.split("#")[1]
+            );
+            if (index !== -1) {
+              updatedMetadata[index] = metadata;
+            } else {
+              updatedMetadata.push(metadata);
+            }
+            return updatedMetadata;
+          });
         });
-        setAdventurersMetadata(updatedMetadata);
 
         setUnrevealedGamesWithMetadata((prev) => [
           ...prev,
@@ -147,8 +149,8 @@ const Claimed = () => {
           );
         }
       }
-      setFreeGamesData(
-        freeGamesData.map((game) => ({
+      setFreeGamesData((prevFreeGamesData) =>
+        prevFreeGamesData.map((game) => ({
           ...game,
           revealed: true,
         }))
@@ -214,19 +216,21 @@ const Claimed = () => {
         })
       );
 
-      let updatedMetadata = [...adventurersMetadata];
       newAdventurersMetadata.forEach((metadata) => {
         if (!metadata) return; // Skip if metadata fetch failed
-        const index = updatedMetadata.findIndex(
-          (meta) => meta.name.split("#")[1] === metadata.name.split("#")[1]
-        );
-        if (index !== -1) {
-          updatedMetadata[index] = metadata;
-        } else {
-          updatedMetadata.push(metadata);
-        }
+        setAdventurersMetadata((prevMetadata) => {
+          const index = prevMetadata.findIndex(
+            (meta) => meta.name.split("#")[1] === metadata.name.split("#")[1]
+          );
+          if (index !== -1) {
+            return prevMetadata.map((meta, i) =>
+              i === index ? metadata : meta
+            );
+          } else {
+            return [...prevMetadata, metadata];
+          }
+        });
       });
-      setAdventurersMetadata(updatedMetadata);
 
       setIsFetchingMetadata(false);
     },

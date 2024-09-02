@@ -15,8 +15,13 @@ const useSyscalls = () => {
   const { account } = useAccount();
   const { connector } = useConnect();
   const { provider } = useProvider();
-  const { setPreparingClaim, setClaiming, freeGamesData, setFreeGamesData } =
-    useUIStore();
+  const {
+    setPreparingClaim,
+    setClaiming,
+    setFreeGamesData,
+    setSkipGameFetch,
+    setClaimed,
+  } = useUIStore();
 
   const executeSetDelegate = async (delegateAddress: string) => {
     if (!account) {
@@ -75,16 +80,17 @@ const useSyscalls = () => {
       "ClaimedFreeGame"
     );
 
-    const updatedFreeGamesData = [
-      ...freeGamesData,
+    setFreeGamesData((prevFreeGamesData) => [
+      ...prevFreeGamesData,
       ...claimedFreeGameEvents.map((event) => ({
         token: event.data.collectionAddress,
         tokenId: event.data.tokenId,
         adventurerId: event.data.adventurerId,
       })),
-    ];
-
-    setFreeGamesData(updatedFreeGamesData);
+    ]);
+    setClaiming(false);
+    setSkipGameFetch(true);
+    setClaimed(true);
   };
 
   const executeReveal = async (gameAddress: string, adventurerId: number) => {

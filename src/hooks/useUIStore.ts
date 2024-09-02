@@ -13,13 +13,19 @@ type State = {
   preparingReveal: boolean;
   setPreparingReveal: (preparingReveal: boolean) => void;
   adventurersMetadata: AdventurerMetadata[];
-  setAdventurersMetadata: (metadata: AdventurerMetadata[]) => void;
+  setAdventurersMetadata: (
+    updater:
+      | AdventurerMetadata[]
+      | ((prevMetadata: AdventurerMetadata[]) => AdventurerMetadata[])
+  ) => void;
   revealedAllMetadata: AdventurerMetadata[];
   setRevealedAllMetadata: (revealedAllMetadata: AdventurerMetadata[]) => void;
   claimedData: any[];
   setClaimedData: (claimedData: any[]) => void;
   freeGamesData: any[];
-  setFreeGamesData: (freeGamesData: any[]) => void;
+  setFreeGamesData: (
+    updater: any[] | ((prevFreeGamesData: any[]) => any[])
+  ) => void;
   username: string;
   setUsername: (username: string) => void;
   isRevealingAll: boolean;
@@ -43,13 +49,23 @@ export const useUIStore = create<State>((set) => ({
   preparingReveal: false,
   setPreparingReveal: (preparingReveal) => set({ preparingReveal }),
   adventurersMetadata: [],
-  setAdventurersMetadata: (metadata) => set({ adventurersMetadata: metadata }),
+  setAdventurersMetadata: (updater) =>
+    set((state) => ({
+      adventurersMetadata:
+        typeof updater === "function"
+          ? updater(state.adventurersMetadata)
+          : updater,
+    })),
   revealedAllMetadata: [],
   setRevealedAllMetadata: (revealedAllMetadata) => set({ revealedAllMetadata }),
   claimedData: [],
   setClaimedData: (claimedData) => set({ claimedData }),
   freeGamesData: [],
-  setFreeGamesData: (freeGamesData) => set({ freeGamesData }),
+  setFreeGamesData: (updater) =>
+    set((state) => ({
+      freeGamesData:
+        typeof updater === "function" ? updater(state.freeGamesData) : updater,
+    })),
   username: "",
   setUsername: (username) => set({ username }),
   isRevealingAll: false,

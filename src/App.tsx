@@ -4,58 +4,14 @@ import Claimed from "./containers/Claimed";
 import Claiming from "./containers/Claiming";
 import PreparingClaim from "./containers/Preparing";
 import { useUIStore } from "./hooks/useUIStore";
-import { networkConfig } from "./lib/networkConfig";
-import { fetchAdventurerMetadata } from "./api/fetchMetadata";
-import { Network } from "./lib/types";
 import { useConnect } from "@starknet-react/core";
 import CartridgeConnector from "@cartridge/connector";
 
 const App = () => {
-  const {
-    claimed,
-    claiming,
-    setAdventurersMetadata,
-    setClaiming,
-    setClaimed,
-    claimedData,
-    preparingClaim,
-    preparingReveal,
-    setUsername,
-    fetchingMetadata,
-    setFetchingMetadata,
-    freeGamesData,
-    setSkipGameFetch,
-  } = useUIStore();
+  const { claimed, claiming, preparingClaim, preparingReveal, setUsername } =
+    useUIStore();
 
   const { connector } = useConnect();
-
-  const network: Network = import.meta.env.VITE_NETWORK;
-
-  useEffect(() => {
-    if (
-      freeGamesData.length > 0 &&
-      fetchingMetadata &&
-      connector?.id.includes("cartridge")
-    ) {
-      const fetchImages = async () => {
-        const adventurersMetadata = await Promise.all(
-          freeGamesData.map((claimed) =>
-            fetchAdventurerMetadata(
-              networkConfig[network!].gameAddress,
-              claimed.adventurerId,
-              networkConfig[network!].rpcUrl
-            )
-          )
-        );
-        setAdventurersMetadata(adventurersMetadata);
-        setClaiming(false);
-        setFetchingMetadata(false);
-        setSkipGameFetch(true);
-        setClaimed(true);
-      };
-      fetchImages();
-    }
-  }, [claimedData, fetchingMetadata, connector]);
 
   useEffect(() => {
     if (connector?.id.includes("cartridge")) {

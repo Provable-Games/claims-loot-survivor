@@ -15,12 +15,8 @@ export interface AdventurerCardProps {
 const AdventurerCard = ({ meta, adventurerId }: AdventurerCardProps) => {
   const [isRevealing, setIsRevealing] = useState(false);
 
-  const {
-    adventurersMetadata,
-    setAdventurersMetadata,
-    freeGamesData,
-    setFreeGamesData,
-  } = useUIStore();
+  const { setAdventurersMetadata, freeGamesData, setFreeGamesData } =
+    useUIStore();
 
   const [revealedStats, setRevealedStats] = useState({
     str: "?",
@@ -35,12 +31,12 @@ const AdventurerCard = ({ meta, adventurerId }: AdventurerCardProps) => {
   const gameAddress = networkConfig[network!].gameAddress;
 
   const updateFreeGamesData = useCallback(() => {
-    setFreeGamesData(
-      freeGamesData.map((game) =>
+    setFreeGamesData((prevFreeGamesData) =>
+      prevFreeGamesData.map((game) =>
         game.adventurerId === adventurerId ? { ...game, revealed: true } : game
       )
     );
-  }, [adventurerId]);
+  }, [adventurerId, freeGamesData]);
 
   const revealStats = async () => {
     setIsRevealing(true);
@@ -85,12 +81,18 @@ const AdventurerCard = ({ meta, adventurerId }: AdventurerCardProps) => {
             (attr: any) => attr.trait === "Charisma"
           ).value,
         });
-        const index = adventurersMetadata.findIndex(
-          (meta) => meta.name.split("#")[1] === metadata.name.split("#")[1]
-        );
-        setAdventurersMetadata(
-          adventurersMetadata.map((meta, i) => (i === index ? metadata : meta))
-        );
+        setAdventurersMetadata((prevMetadata) => {
+          const index = prevMetadata.findIndex(
+            (meta) => meta.name.split("#")[1] === metadata.name.split("#")[1]
+          );
+          if (index !== -1) {
+            return prevMetadata.map((meta, i) =>
+              i === index ? metadata : meta
+            );
+          } else {
+            return [...prevMetadata, metadata];
+          }
+        });
         updateFreeGamesData();
         setIsRevealing(false);
       } else {
