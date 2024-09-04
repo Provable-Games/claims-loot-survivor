@@ -6,7 +6,7 @@ import PreparingClaim from "./containers/Preparing";
 import { useUIStore } from "./hooks/useUIStore";
 import { useConnect } from "@starknet-react/core";
 import CartridgeConnector from "@cartridge/connector";
-// import Countdown from "./containers/Countdown";
+import Countdown from "./containers/Countdown";
 
 const App = () => {
   const { claimed, claiming, preparingClaim, preparingReveal, setUsername } =
@@ -37,7 +37,7 @@ const App = () => {
       {preparingClaim && <PreparingClaim type="claim" />}
       {preparingReveal && <PreparingClaim type="reveal" />}
       {claiming && <Claiming />}
-      {/* <Countdown /> */}
+      <Countdown />
     </div>
   );
 };
