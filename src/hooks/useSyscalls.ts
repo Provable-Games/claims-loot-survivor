@@ -126,7 +126,7 @@ const useSyscalls = () => {
       return;
     }
 
-    await account
+    const tx = await account
       .execute([
         {
           contractAddress: gameAddress,
@@ -135,6 +135,8 @@ const useSyscalls = () => {
         },
       ])
       .catch((e) => console.error(e));
+
+    await provider?.waitForTransaction((tx as any)?.transaction_hash);
   };
 
   const executeRevealAll = async (
