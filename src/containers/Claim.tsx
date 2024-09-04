@@ -21,10 +21,12 @@ import {
   getGamesByTokens,
   getClaimedFreeGamesCounts,
 } from "../hooks/graphql/queries";
+import { AccountInterface } from "starknet";
 
 const Claim = () => {
   const [nftWallet, setNftWallet] = useState("");
   const [controllerAccount, setControllerAccount] = useState("");
+  const [delegateAccount, setDelegateAccount] = useState("");
   const [claimedGames, setClaimedGames] = useState([]);
   const [selectSkip, setSelectSkip] = useState(false);
   const [hashList, setHashList] = useState([]);
@@ -44,13 +46,14 @@ const Claim = () => {
     freeGamesData,
     setFreeGamesData,
     resetAllState,
+    signature,
   } = useUIStore();
 
   const { connectors, connect, connector } = useConnect();
   const { disconnect } = useDisconnect();
   const { account, address } = useAccount();
   const network: Network = import.meta.env.VITE_NETWORK;
-  const { executeClaim } = useSyscalls();
+  const { executeClaim, verifyWalletSignature } = useSyscalls();
 
   const walletConnectors = getWalletConnectors(connectors);
 
@@ -199,7 +202,21 @@ const Claim = () => {
     clickPlay();
     setPreparingClaim(true);
     setNftWallet(connector?.id!);
+    setDelegateAccount(address!);
     setClaimedGames(freeGamesAvailable);
+    const cartridgeConnector = connectors.find(
+      (connector) => connector.id === "cartridge"
+    );
+    if (cartridgeConnector) {
+      connect({ connector: cartridgeConnector });
+    }
+  };
+
+  const executeSignatureProcess = async () => {
+    await verifyWalletSignature(
+      account as unknown as AccountInterface,
+      controllerAccount
+    );
     const cartridgeConnector = connectors.find(
       (connector) => connector.id === "cartridge"
     );
@@ -210,19 +227,12 @@ const Claim = () => {
 
   const executeClaimProcess = async () => {
     try {
-      // setDelegateAccount(address!);
-      // await executeSetDelegate(delegateAccount);
       await executeClaim(
         networkConfig[network!].gameAddress,
         claimedGames,
-        controllerAccount
+        delegateAccount
       );
-      const cartridgeConnector = connectors.find(
-        (connector) => connector.id === "cartridge"
-      );
-      if (cartridgeConnector) {
-        connect({ connector: cartridgeConnector });
-      }
+      setDelegateAccount("");
       setFetchingMetadata(true);
     } catch (error) {
       setClaiming(false);
@@ -247,19 +257,23 @@ const Claim = () => {
         setClaimed(true);
       } else {
         const timer = setTimeout(() => {
-          setControllerAccount(address!);
+          if (signature) {
+            executeClaimProcess();
+          } else {
+            setControllerAccount(address!);
+          }
         }, 2000); // Wait for 2 seconds (adjust as needed)
 
         return () => clearTimeout(timer); // Clean up the timer
       }
     }
-  }, [connector, account]);
+  }, [connector, account, signature]);
 
   useEffect(() => {
     if (connector?.id !== "cartridge" && account) {
       if (controllerAccount && !claimed) {
         const timer = setTimeout(() => {
-          executeClaimProcess();
+          executeSignatureProcess();
         }, 2000); // Wait for 2 seconds (adjust as needed)
 
         return () => clearTimeout(timer); // Clean up the timer

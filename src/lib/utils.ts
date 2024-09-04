@@ -1,5 +1,12 @@
 import { ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import {
+  shortString,
+  StarknetDomain,
+  TypedData,
+  TypedDataRevision,
+  typedData,
+} from "starknet";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -78,3 +85,43 @@ export const colorMap = (stat: number, isRevealing: boolean) => {
   if (stat <= 9) return "bg-terminal-green text-terminal-black";
   return "bg-terminal-green text-terminal-black";
 };
+
+const types = {
+  StarknetDomain: [
+    { name: "name", type: "shortstring" },
+    { name: "version", type: "shortstring" },
+    { name: "chainId", type: "shortstring" },
+    { name: "revision", type: "shortstring" },
+  ],
+  Message: [{ name: "recipient", type: "ContractAddress" }],
+};
+
+interface Message {
+  recipient: string;
+}
+
+function getDomain(chainId: string): StarknetDomain {
+  return {
+    name: "Loot Survivor",
+    version: shortString.encodeShortString("1"),
+    chainId,
+    revision: TypedDataRevision.ACTIVE,
+  };
+}
+
+export function getTypedData(myStruct: Message, chainId: string): TypedData {
+  return {
+    types,
+    primaryType: "Message",
+    domain: getDomain(chainId),
+    message: { ...myStruct },
+  };
+}
+
+export function getTypedDataHash(
+  myStruct: Message,
+  chainId: string,
+  owner: bigint
+): string {
+  return typedData.getMessageHash(getTypedData(myStruct, chainId), owner);
+}

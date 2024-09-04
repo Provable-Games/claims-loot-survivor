@@ -1,5 +1,6 @@
 import { useAccount, useConnect, useProvider } from "@starknet-react/core";
-import { InvokeTransactionReceiptResponse } from "starknet";
+import { InvokeTransactionReceiptResponse, constants } from "starknet";
+import { AccountInterface } from "starknet";
 import {
   COLLECTION_WEAPON_MAP,
   COLLECTION_TOKENS_MAP,
@@ -8,8 +9,8 @@ import {
 import { padAddress, getKeyByValue, stringToFelt } from "../lib/utils";
 import { parseEvents } from "../lib/parseEvents";
 import { useUIStore } from "./useUIStore";
-// import { useUIStore } from "./useUIStore";
-// import CartridgeConnector from "@cartridge/connector";
+import { getTypedData } from "../lib/utils";
+import { Network } from "../lib/types";
 
 const useSyscalls = () => {
   const { account } = useAccount();
@@ -21,6 +22,8 @@ const useSyscalls = () => {
     setFreeGamesData,
     setSkipGameFetch,
     setClaimed,
+    signature,
+    setSignature,
   } = useUIStore();
 
   const executeSetDelegate = async (delegateAddress: string) => {
@@ -43,14 +46,32 @@ const useSyscalls = () => {
       .catch((e) => console.error(e));
   };
 
+  const verifyWalletSignature = async (
+    account: AccountInterface,
+    controllerAccount: string
+  ) => {
+    const network = import.meta.env.VITE_NETWORK as Network;
+
+    const signature = await account.signMessage(
+      getTypedData(
+        { recipient: controllerAccount },
+        network === "mainnet"
+          ? constants.StarknetChainId.SN_MAIN
+          : constants.StarknetChainId.SN_SEPOLIA
+      )
+    );
+
+    setSignature(signature);
+  };
+
   const executeClaim = async (
     gameAddress: string,
     freeGames: any[],
-    controllerAccount: string
+    delegateAddress: string
   ) => {
     const calls = freeGames.map((game) => ({
       contractAddress: gameAddress,
-      entrypoint: "enter_launch_tournament",
+      entrypoint: "enter_launch_tournament_with_signature",
       calldata: [
         COLLECTION_WEAPON_MAP[
           getKeyByValue(COLLECTION_TOKENS_MAP, padAddress(game.token))
@@ -62,7 +83,9 @@ const useSyscalls = () => {
         "1", // all the free games should not reveal stats immediately
         game.token, // collection address
         game.tokenId.toString(), // token id
-        controllerAccount,
+        delegateAddress,
+        account.address,
+        signature,
       ],
     }));
 
@@ -91,6 +114,7 @@ const useSyscalls = () => {
     setClaiming(false);
     setSkipGameFetch(true);
     setClaimed(true);
+    setSignature(null);
   };
 
   const executeReveal = async (gameAddress: string, adventurerId: number) => {
@@ -136,7 +160,13 @@ const useSyscalls = () => {
     await provider?.waitForTransaction((tx as any)?.transaction_hash);
   };
 
-  return { executeSetDelegate, executeClaim, executeReveal, executeRevealAll };
+  return {
+    executeSetDelegate,
+    verifyWalletSignature,
+    executeClaim,
+    executeReveal,
+    executeRevealAll,
+  };
 };
 
 export default useSyscalls;
