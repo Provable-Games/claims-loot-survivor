@@ -21,7 +21,7 @@ export const networkConfig = {
     gameAddress:
       "0x0305f26ad19e0a10715d9f3137573d3a543de7b707967cd85d11234d6ec0fb7e",
     lordsAddress:
-      "0x072599086bffce6593a2e08169c21d23564f08be1e1d0b8e05a9768f20469a3f",
+      "0x0124aeb495b947201f5fac96fd1138e326ad86195b98df6dec9009158a533b49",
     appUrl: "https://claims.lootsurvivor.io/",
     blockExplorerUrl: "https://voyager.online/",
   },
