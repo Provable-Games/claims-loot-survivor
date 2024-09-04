@@ -140,10 +140,10 @@ const Claim = () => {
 
   // Separate effect for fetching game data when hashList changes
   useEffect(() => {
-    if (hashList.length > 0) {
+    if (nftDataFetched) {
       fetchGameData();
     }
-  }, [hashList]);
+  }, [hashList, nftDataFetched]);
 
   const mergeGameData = useCallback(() => {
     if (!nftDataFetched || !gameDataFetched) {
