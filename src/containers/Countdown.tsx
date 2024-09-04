@@ -32,7 +32,7 @@ const Countdown = () => {
   ];
 
   // Set your target date here
-  const targetDate = new Date("2024-09-04T15:10:41").getTime();
+  const targetDate = Date.UTC(2024, 8, 4, 19, 10, 41);
 
   useEffect(() => {
     const interval = setInterval(() => {
