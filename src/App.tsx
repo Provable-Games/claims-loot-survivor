@@ -7,7 +7,6 @@ import { useUIStore } from "./hooks/useUIStore";
 import { useAccount, useConnect } from "@starknet-react/core";
 import CartridgeConnector from "@cartridge/connector";
 import Countdown from "./containers/Countdown";
-import { Network } from "./lib/types";
 import { constants } from "starknet";
 import NetworkSwitchError from "./containers/NetworkSwitchError";
 
@@ -50,7 +49,7 @@ const App = () => {
     }
   };
 
-  const network = import.meta.env.VITE_NETWORK as Network;
+  const network = "mainnet";
 
   useEffect(() => {
     getAccountChainId();

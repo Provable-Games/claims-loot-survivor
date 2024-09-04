@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { Button } from "./Button";
 import useSyscalls from "../hooks/useSyscalls";
 import { networkConfig } from "../lib/networkConfig";
-import { Network } from "../lib/types";
 import { fetchAdventurerMetadata } from "../api/fetchMetadata";
 import { statsRevealed, colorMap } from "../lib/utils";
 import { useUIStore } from "../hooks/useUIStore";
@@ -27,7 +26,7 @@ const AdventurerCard = ({ meta, adventurerId }: AdventurerCardProps) => {
     cha: "?",
   });
   const { executeReveal } = useSyscalls();
-  const network: Network = import.meta.env.VITE_NETWORK;
+  const network = "mainnet";
   const gameAddress = networkConfig[network!].gameAddress;
 
   const updateFreeGamesData = useCallback(() => {

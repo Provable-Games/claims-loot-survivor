@@ -94,10 +94,16 @@ export const SELECTOR_KEYS = {
 };
 
 export const collectionTotalGames = (tournament: string) => {
-  if (tournament === "0") {
+  if (tournament === "1") {
     return 300;
   } else {
     return 1600;
   }
 };
-export const maxFreeGames = 12800;
+export const maxFreeGames = (tournament: string) => {
+  if (tournament === "1") {
+    return 2400;
+  } else {
+    return 12800;
+  }
+};

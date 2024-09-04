@@ -13,7 +13,6 @@ import {
 import { displayAddress, indexAddress, padAddress } from "../lib/utils";
 import useSyscalls from "../hooks/useSyscalls";
 import { useUIStore } from "../hooks/useUIStore";
-import { Network } from "../lib/types";
 import { networkConfig } from "../lib/networkConfig";
 import { useQuery } from "@apollo/client";
 import {
@@ -49,10 +48,13 @@ const Claim = () => {
     signature,
   } = useUIStore();
 
+  const tbtTournament = import.meta.env.VITE_TBT_TOURNAMENT;
+  const releaseTournament = import.meta.env.VITE_RELEASE_TOURNAMENT;
+
   const { connectors, connect, connector } = useConnect();
   const { disconnect } = useDisconnect();
   const { account, address } = useAccount();
-  const network: Network = import.meta.env.VITE_NETWORK;
+  const network = "mainnet";
   const { executeClaim, verifyWalletSignature } = useSyscalls();
 
   const walletConnectors = getWalletConnectors(connectors);
@@ -104,7 +106,7 @@ const Claim = () => {
     );
   }, [claimedFreeGamesCountsData]);
 
-  const mintedOut = totalFreeGames >= maxFreeGames;
+  const mintedOut = totalFreeGames >= maxFreeGames(tbtTournament);
 
   const fetchNftData = useCallback(async () => {
     if (connector?.id !== "cartridge") {
@@ -304,11 +306,7 @@ const Claim = () => {
           (game: any) => game.token === indexAddress(token)
         ).count
       : undefined;
-    const tokenGameCount = GAMES_PER_TOKEN[token];
-    const maxTokens = Math.ceil(
-      collectionTotalGames(tbtTournament) / tokenGameCount
-    );
-    const totalGamesLeft = maxTokens - Math.ceil(gamesClaimed / tokenGameCount);
+    const totalGamesLeft = collectionTotalGames(tbtTournament) - gamesClaimed;
     const isMintedOut = totalGamesLeft <= 0;
     const closed = tbtTournament === "0" && releaseTournament === "0";
     return (
@@ -330,9 +328,9 @@ const Claim = () => {
         {claimedFreeGamesCountsData && !closed ? (
           <span
             className={`w-full absolute top-[-30px] flex flex-row border ${
-              totalGamesLeft > 800
+              totalGamesLeft > (tbtTournament === "1" ? 150 : 800)
                 ? "border-terminal-green text-terminal-green"
-                : totalGamesLeft > 160
+                : totalGamesLeft > (tbtTournament === "1" ? 30 : 160)
                 ? "border-terminal-yellow text-terminal-yellow"
                 : "border-red-600 text-red-600"
             } rounded-lg justify-center uppercase`}
@@ -367,9 +365,6 @@ const Claim = () => {
       </div>
     );
   };
-
-  const tbtTournament = import.meta.env.VITE_TBT_TOURNAMENT;
-  const releaseTournament = import.meta.env.VITE_RELEASE_TOURNAMENT;
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center bg-terminal-black sm:pt-8 sm:p-8 lg:p-10 2xl:p-20">

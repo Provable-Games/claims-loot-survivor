@@ -10,7 +10,6 @@ import { padAddress, getKeyByValue, stringToFelt } from "../lib/utils";
 import { parseEvents } from "../lib/parseEvents";
 import { useUIStore } from "./useUIStore";
 import { getTypedData } from "../lib/utils";
-import { Network } from "../lib/types";
 
 const useSyscalls = () => {
   const { account } = useAccount();
@@ -50,7 +49,7 @@ const useSyscalls = () => {
     account: AccountInterface,
     controllerAccount: string
   ) => {
-    const network = import.meta.env.VITE_NETWORK as Network;
+    const network = "mainnet";
 
     const signature = await account.signMessage(
       getTypedData(

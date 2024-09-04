@@ -14,7 +14,7 @@ export const networkConfig = {
   },
   mainnet: {
     rpcUrl: "https://api.cartridge.gg/x/starknet/mainnet",
-    lsGQLURL: "https://ls-indexer-mainnet.provable.games/graphql",
+    lsGQLURL: "https://ls-indexer-sepolia.provable.games/graphql",
     ethAddress:
       "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
     gameAddress:

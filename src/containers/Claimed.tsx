@@ -6,7 +6,6 @@ import { useUiSounds, soundSelector } from "../hooks/useUISound";
 import AdventurerCard from "../components/AdventurerCard";
 import { useUIStore } from "../hooks/useUIStore";
 import useSyscalls from "../hooks/useSyscalls";
-import { Network } from "../lib/types";
 import { networkConfig } from "../lib/networkConfig";
 import { useAccount, useDisconnect } from "@starknet-react/core";
 import RevealAll from "../components/animations/RevealAll";
@@ -64,7 +63,7 @@ const Claimed = () => {
 
   const finalPage = currentPage === totalPages - 1 || totalPages === 0;
 
-  const network: Network = import.meta.env.VITE_NETWORK;
+  const network = "mainnet";
   const gameAddress = networkConfig[network!].gameAddress;
   const appUrl = networkConfig[network!].appUrl;
 
@@ -423,7 +422,7 @@ const Claimed = () => {
               onClick={() => {
                 clickPlay();
                 window.open(
-                  "https://sepolia.lootsurvivor.io/",
+                  "https://lootsurvivor.io/",
                   "_blank",
                   "noopener,noreferrer"
                 );
@@ -464,7 +463,7 @@ const Claimed = () => {
               onClick={() => {
                 clickPlay();
                 window.open(
-                  "https://sepolia.lootsurvivor.io/",
+                  "https://lootsurvivor.io/",
                   "_blank",
                   "noopener,noreferrer"
                 );
