@@ -40,7 +40,8 @@ export function StarknetProvider({
         cartridgeConnector(
           networkConfig[network!].gameAddress,
           networkConfig[network!].lordsAddress,
-          networkConfig[network!].ethAddress
+          networkConfig[network!].ethAddress,
+          networkConfig[network!].rpcUrl
         ),
       ]}
       explorer={starkscan}
