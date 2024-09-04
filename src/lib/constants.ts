@@ -1,6 +1,5 @@
 import { hash } from "starknet";
 import { CollectionData } from "./types";
-import { Network } from "./types";
 
 export const COLLECTION_TOKENS_MAP = {
   Blobert: "0x00539f522b29ae9251dbf7443c7a950cf260372e69efab3710a11bf17a9599f1",
@@ -93,11 +92,11 @@ export const SELECTOR_KEYS = {
   ClaimedFreeGame: hash.getSelectorFromName("ClaimedFreeGame"),
 };
 
-export const collectionTotalGames = (network: Network) => {
-  if (network === "mainnet") {
-    return 1600;
-  } else {
+export const collectionTotalGames = (tournament: boolean) => {
+  if (tournament) {
     return 300;
+  } else {
+    return 1600;
   }
 };
 export const maxFreeGames = 12800;

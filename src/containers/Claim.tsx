@@ -280,7 +280,7 @@ const Claim = () => {
     alt: string,
     index: number
   ) => {
-    const network = import.meta.env.VITE_NETWORK;
+    const tournament = import.meta.env.VITE_TOURNAMENT;
     const freeGames = getCollectionFreeGames(token);
     const gamesClaimed = claimedFreeGamesCountsData
       ? claimedFreeGamesCountsData?.countClaimedFreeGames?.find(
@@ -288,7 +288,9 @@ const Claim = () => {
         ).count
       : undefined;
     const tokenGameCount = GAMES_PER_TOKEN[token];
-    const maxTokens = Math.ceil(collectionTotalGames(network) / tokenGameCount);
+    const maxTokens = Math.ceil(
+      collectionTotalGames(tournament) / tokenGameCount
+    );
     const totalGamesLeft = maxTokens - Math.ceil(gamesClaimed / tokenGameCount);
     const isMintedOut = totalGamesLeft <= 0;
     return (
