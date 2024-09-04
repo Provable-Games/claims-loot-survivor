@@ -278,9 +278,10 @@ const Claim = () => {
     token: string,
     image: string,
     alt: string,
-    index: number
+    index: number,
+    tbtTournament: string,
+    releaseTournament: string
   ) => {
-    const tournament = import.meta.env.VITE_TOURNAMENT;
     const freeGames = getCollectionFreeGames(token);
     const gamesClaimed = claimedFreeGamesCountsData
       ? claimedFreeGamesCountsData?.countClaimedFreeGames?.find(
@@ -289,26 +290,28 @@ const Claim = () => {
       : undefined;
     const tokenGameCount = GAMES_PER_TOKEN[token];
     const maxTokens = Math.ceil(
-      collectionTotalGames(tournament) / tokenGameCount
+      collectionTotalGames(tbtTournament) / tokenGameCount
     );
     const totalGamesLeft = maxTokens - Math.ceil(gamesClaimed / tokenGameCount);
     const isMintedOut = totalGamesLeft <= 0;
+    const closed = tbtTournament === "0" && releaseTournament === "0";
     return (
       <div
         className="flex flex-col gap-2 items-center justify-center relative"
         key={index}
       >
-        {isMintedOut && (
-          <>
-            <span className="absolute w-full h-full bg-terminal-black opacity-50 z-10" />
-            <span className="absolute w-full h-full z-20">
-              <span className="text-red-800 w-1/2 h-1/2">
-                <OutIcon />
+        {isMintedOut ||
+          (closed && (
+            <>
+              <span className="absolute w-full h-full bg-terminal-black opacity-50 z-10" />
+              <span className="absolute w-full h-full z-20">
+                <span className="text-red-800 w-1/2 h-1/2">
+                  <OutIcon />
+                </span>
               </span>
-            </span>
-          </>
-        )}
-        {claimedFreeGamesCountsData ? (
+            </>
+          ))}
+        {claimedFreeGamesCountsData && !closed ? (
           <span
             className={`w-full absolute top-[-30px] flex flex-row border ${
               totalGamesLeft > 800
@@ -338,7 +341,7 @@ const Claim = () => {
             className="w-full h-full"
           />
         </span>
-        {address && freeGames > 0 && (
+        {address && freeGames > 0 && !closed && (
           <span className="w-full absolute top-24 flex flex-row bg-terminal-green text-terminal-black rounded-lg justify-center uppercase">
             {`${freeGames}
           Game${freeGames > 1 ? "s" : ""}
@@ -348,6 +351,9 @@ const Claim = () => {
       </div>
     );
   };
+
+  const tbtTournament = import.meta.env.VITE_TBT_TOURNAMENT;
+  const releaseTournament = import.meta.env.VITE_RELEASE_TOURNAMENT;
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center bg-terminal-black sm:pt-8 sm:p-8 lg:p-10 2xl:p-20">
@@ -386,7 +392,9 @@ const Claim = () => {
                 collection.token,
                 collection.image,
                 collection.alt,
-                index
+                index,
+                tbtTournament,
+                releaseTournament
               )
             )}
           </div>
@@ -422,7 +430,11 @@ const Claim = () => {
                       <p className="uppercase loading-ellipsis">Loading</p>
                     ) : (
                       <>
-                        {!alreadyClaimed ? (
+                        {tbtTournament === "0" && releaseTournament === "0" ? (
+                          <p className="text-4xl uppercase">
+                            Tournament closed
+                          </p>
+                        ) : !alreadyClaimed ? (
                           <>
                             <p className="uppercase text-2xl">
                               Check Eligibility

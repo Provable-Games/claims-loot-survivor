@@ -92,8 +92,8 @@ export const SELECTOR_KEYS = {
   ClaimedFreeGame: hash.getSelectorFromName("ClaimedFreeGame"),
 };
 
-export const collectionTotalGames = (tournament: boolean) => {
-  if (tournament) {
+export const collectionTotalGames = (tournament: string) => {
+  if (tournament === "0") {
     return 300;
   } else {
     return 1600;
