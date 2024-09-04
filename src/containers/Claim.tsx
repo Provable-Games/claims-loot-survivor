@@ -210,8 +210,6 @@ const Claim = () => {
 
   const executeClaimProcess = async () => {
     try {
-      // setDelegateAccount(address!);
-      // await executeSetDelegate(delegateAccount);
       await executeClaim(
         networkConfig[network!].gameAddress,
         claimedGames,
@@ -282,6 +280,7 @@ const Claim = () => {
     alt: string,
     index: number
   ) => {
+    const network = import.meta.env.VITE_NETWORK;
     const freeGames = getCollectionFreeGames(token);
     const gamesClaimed = claimedFreeGamesCountsData
       ? claimedFreeGamesCountsData?.countClaimedFreeGames?.find(
@@ -289,7 +288,7 @@ const Claim = () => {
         ).count
       : undefined;
     const tokenGameCount = GAMES_PER_TOKEN[token];
-    const maxTokens = Math.floor(collectionTotalGames / tokenGameCount);
+    const maxTokens = Math.ceil(collectionTotalGames(network) / tokenGameCount);
     const totalGamesLeft = maxTokens - Math.ceil(gamesClaimed / tokenGameCount);
     const isMintedOut = totalGamesLeft <= 0;
     return (

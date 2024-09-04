@@ -1,15 +1,16 @@
 import { hash } from "starknet";
 import { CollectionData } from "./types";
+import { Network } from "./types";
 
 export const COLLECTION_TOKENS_MAP = {
-  Blobert: "0x04a79a62dc260f2e9e4b208181b2014c14f3ff44fe7d0e6452a759ed91a106d1",
+  Blobert: "0x00539f522b29ae9251dbf7443c7a950cf260372e69efab3710a11bf17a9599f1",
   DucksEverywhere:
-    "0x07c006181ea9cc7dd1b09c29e9ff23112be30ecfef73b760fabe5bc7ae6ecb44",
-  Everai: "0x04efe851716110abeee81b7f22f7964845355ffa32e6833fc3a557a1881721ac",
+    "0x04fa864a706e3403fd17ac8df307f22eafa21b778b73353abf69a622e47a2003",
+  Everai: "0x02acee8c430f62333cf0e0e7a94b2347b5513b4c25f699461dd8d7b23c072478",
   FocusTree:
     "0x0377c2d65debb3978ea81904e7d59740da1f07412e30d01c5ded1c5d6f1ddc43",
   InfluenceCrew:
-    "0x07280a807c8b79379bec87919433b7b836b93a92e6d71b24ee99f4ffe33dd337",
+    "0x0241b9c4ce12c06f49fee2ec7c16337386fa5185168f538a7631aacecdf3df74",
   TheSyndicate: "0x1",
   PixelBanners:
     "0x02d66679de61a5c6d57afd21e005a8c96118bd60315fd79a4521d68f5e5430d1",
@@ -19,8 +20,7 @@ export const COLLECTION_TOKENS_MAP = {
 export const COLLECTION_WEAPON_MAP = {
   Blobert: "76",
   DucksEverywhere: "76",
-  DuckFrens: "76",
-  Everai: "46",
+  Everai: "12",
   FocusTree: "16",
   InfluenceCrew: "16",
   TheSyndicate: "12",
@@ -72,11 +72,11 @@ export const collectionsData: CollectionData[] = [
 ];
 
 export const GAMES_PER_TOKEN = {
-  "0x04a79a62dc260f2e9e4b208181b2014c14f3ff44fe7d0e6452a759ed91a106d1": 3,
-  "0x07c006181ea9cc7dd1b09c29e9ff23112be30ecfef73b760fabe5bc7ae6ecb44": 1,
-  "0x04efe851716110abeee81b7f22f7964845355ffa32e6833fc3a557a1881721ac": 2,
+  "0x00539f522b29ae9251dbf7443c7a950cf260372e69efab3710a11bf17a9599f1": 1,
+  "0x04fa864a706e3403fd17ac8df307f22eafa21b778b73353abf69a622e47a2003": 6,
+  "0x02acee8c430f62333cf0e0e7a94b2347b5513b4c25f699461dd8d7b23c072478": 2,
   "0x0377c2d65debb3978ea81904e7d59740da1f07412e30d01c5ded1c5d6f1ddc43": 1,
-  "0x07280a807c8b79379bec87919433b7b836b93a92e6d71b24ee99f4ffe33dd337": 1,
+  "0x0241b9c4ce12c06f49fee2ec7c16337386fa5185168f538a7631aacecdf3df74": 1,
   "0x1": 1,
   "0x02d66679de61a5c6d57afd21e005a8c96118bd60315fd79a4521d68f5e5430d1": 1,
   "0x07ae27a31bb6526e3de9cf02f081f6ce0615ac12a6d7b85ee58b8ad7947a2809": 1,
@@ -93,5 +93,11 @@ export const SELECTOR_KEYS = {
   ClaimedFreeGame: hash.getSelectorFromName("ClaimedFreeGame"),
 };
 
-export const collectionTotalGames = 1600;
-export const maxFreeGames = 12796; // (1600 * 8) - 4 = 12796 (minus the extra ducks)
+export const collectionTotalGames = (network: Network) => {
+  if (network === "mainnet") {
+    return 1600;
+  } else {
+    return 300;
+  }
+};
+export const maxFreeGames = 12800;
