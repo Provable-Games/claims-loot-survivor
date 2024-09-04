@@ -21,6 +21,14 @@ export const cartridgeConnector = (
       },
       {
         target: gameAddress,
+        method: "enter_launch_tournament",
+      },
+      {
+        target: gameAddress,
+        method: "enter_launch_tournament_with_signature",
+      },
+      {
+        target: gameAddress,
         method: "explore",
       },
       {

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { AdventurerMetadata } from "../lib/types";
+import { Signature } from "starknet";
 
 type State = {
   claimed: boolean;
@@ -34,6 +35,8 @@ type State = {
   setAlreadyClaimed: (alreadyClaimed: boolean) => void;
   skipGameFetch: boolean;
   setSkipGameFetch: (skipGameFetch: boolean) => void;
+  signature: Signature;
+  setSignature: (signature: Signature) => void;
   resetAllState: () => void;
 };
 
@@ -74,6 +77,8 @@ export const useUIStore = create<State>((set) => ({
   setAlreadyClaimed: (alreadyClaimed) => set({ alreadyClaimed }),
   skipGameFetch: false,
   setSkipGameFetch: (skipGameFetch) => set({ skipGameFetch }),
+  signature: null,
+  setSignature: (signature) => set({ signature }),
   resetAllState: () =>
     set({
       claimed: false,
