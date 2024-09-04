@@ -4,16 +4,22 @@ import Claimed from "./containers/Claimed";
 import Claiming from "./containers/Claiming";
 import PreparingClaim from "./containers/Preparing";
 import { useUIStore } from "./hooks/useUIStore";
-import { useConnect } from "@starknet-react/core";
+import { useAccount, useConnect } from "@starknet-react/core";
 import CartridgeConnector from "@cartridge/connector";
 import Countdown from "./containers/Countdown";
+import { Network } from "./lib/types";
+import { constants } from "starknet";
+import NetworkSwitchError from "./containers/NetworkSwitchError";
 
 const App = () => {
   const { claimed, claiming, preparingClaim, preparingReveal, setUsername } =
     useUIStore();
 
   const [countdown, setCountdown] = useState(false);
+  const [isWrongNetwork, setIsWrongNetwork] = useState(false);
+  const [accountChainId, setAccountChainId] = useState("");
 
+  const { account } = useAccount();
   const { connector } = useConnect();
 
   useEffect(() => {
@@ -30,12 +36,33 @@ const App = () => {
 
   useEffect(() => {
     const now = new Date().getTime();
-    const targetDate = Date.UTC(2024, 8, 4, 21, 10, 41);
+    const targetDate = Date.UTC(2024, 8, 4, 22, 10, 41);
     const difference = targetDate - now;
     if (difference > 0) {
       setCountdown(true);
     }
   }, []);
+
+  const getAccountChainId = async () => {
+    if (account) {
+      const chainId = await account!.getChainId();
+      setAccountChainId(chainId);
+    }
+  };
+
+  const network = import.meta.env.VITE_NETWORK as Network;
+
+  useEffect(() => {
+    getAccountChainId();
+    const isWrongNetwork =
+      accountChainId !==
+      (network === "mainnet"
+        ? constants.StarknetChainId.SN_MAIN
+        : network === "sepolia"
+        ? constants.StarknetChainId.SN_SEPOLIA
+        : "0x4b4154414e41"); // katana chain ID
+    setIsWrongNetwork(isWrongNetwork);
+  }, [account, accountChainId]);
 
   return (
     <div className="fixed min-h-screen w-full overflow-hidden text-terminal-green bg-conic-to-br to-terminal-black from-terminal-black bezel-container">
@@ -49,6 +76,7 @@ const App = () => {
       {preparingReveal && <PreparingClaim type="reveal" />}
       {claiming && <Claiming />}
       {countdown && <Countdown />}
+      <NetworkSwitchError network={network} isWrongNetwork={isWrongNetwork} />
     </div>
   );
 };
