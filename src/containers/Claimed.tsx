@@ -415,7 +415,7 @@ const Claimed = () => {
           )}
           <div className="flex flex-col gap-2">
             <TwitterShareButton
-              text={`🚀 Just claimed ${freeGamesData.length} FREE adventurers! 🎮\n\nLoot Survivor is running an epic tournament with FREE gas & VRF for a whole week! 😱\n\nIf you've got a qualifying NFT, you can score a full FREE game too! Don't miss out.\n\n${appUrl}\n\n@LootSurvivor #airdrop #Web3 #Starknet`}
+              text={`🚀 Just claimed ${freeGamesData.length} FREE adventurers! 🎮\n\nLoot Survivor is running an epic tournament with FREE gas & VRF! 😱\n\nHold @Starknet NFTs? You may be eligible for a deadly adventure 🪦\n\nVisit ${appUrl} to find out.\n\n#airdrop #Web3`}
             />
             <Button
               size="lg"
