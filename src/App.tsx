@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Claim from "./containers/Claim";
 import Claimed from "./containers/Claimed";
 import Claiming from "./containers/Claiming";
@@ -11,6 +11,8 @@ import Countdown from "./containers/Countdown";
 const App = () => {
   const { claimed, claiming, preparingClaim, preparingReveal, setUsername } =
     useUIStore();
+
+  const [countdown, setCountdown] = useState(false);
 
   const { connector } = useConnect();
 
@@ -26,6 +28,15 @@ const App = () => {
     }
   }, [connector]);
 
+  useEffect(() => {
+    const now = new Date().getTime();
+    const targetDate = Date.UTC(2024, 8, 4, 19, 10, 41);
+    const difference = targetDate - now;
+    if (difference > 0) {
+      setCountdown(true);
+    }
+  }, []);
+
   return (
     <div className="fixed min-h-screen w-full overflow-hidden text-terminal-green bg-conic-to-br to-terminal-black from-terminal-black bezel-container">
       <img
@@ -37,7 +48,7 @@ const App = () => {
       {preparingClaim && <PreparingClaim type="claim" />}
       {preparingReveal && <PreparingClaim type="reveal" />}
       {claiming && <Claiming />}
-      <Countdown />
+      {countdown && <Countdown />}
     </div>
   );
 };
