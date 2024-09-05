@@ -317,17 +317,16 @@ const Claim = () => {
         className="flex flex-col gap-2 items-center justify-center relative"
         key={index}
       >
-        {isMintedOut ||
-          (closed && (
-            <>
-              <span className="absolute w-full h-full bg-terminal-black opacity-50 z-10" />
-              <span className="absolute w-full h-full z-20">
-                <span className="text-red-800 w-1/2 h-1/2">
-                  <OutIcon />
-                </span>
+        {(isMintedOut || closed) && (
+          <>
+            <span className="absolute w-full h-full bg-terminal-black opacity-50 z-10" />
+            <span className="absolute w-full h-full z-20">
+              <span className="text-red-800 w-1/2 h-1/2">
+                <OutIcon />
               </span>
-            </>
-          ))}
+            </span>
+          </>
+        )}
         {claimedFreeGamesCountsData && !closed ? (
           <span
             className={`w-full absolute top-[-30px] flex flex-row border ${
@@ -358,7 +357,7 @@ const Claim = () => {
             className="w-full h-full"
           />
         </span>
-        {address && freeGames > 0 && !closed && (
+        {address && freeGames > 0 && !closed && !mintedOut && (
           <span className="w-full absolute top-24 flex flex-row bg-terminal-green text-terminal-black rounded-lg justify-center uppercase">
             {`${gamesToClaim}
           Game${gamesToClaim > 1 ? "s" : ""}
