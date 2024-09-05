@@ -76,7 +76,9 @@ const useSyscalls = () => {
           game.token !==
             "0x377c2d65debb3978ea81904e7d59740da1f07412e30d01c5ded1c5d6f1ddc43" &&
           game.token !==
-            "0x241b9c4ce12c06f49fee2ec7c16337386fa5185168f538a7631aacecdf3df74"
+            "0x241b9c4ce12c06f49fee2ec7c16337386fa5185168f538a7631aacecdf3df74" &&
+          game.token !==
+            "0x00539f522b29ae9251dbf7443c7a950cf260372e69efab3710a11bf17a9599f1"
       )
       .map((game) => ({
         contractAddress: gameAddress,
