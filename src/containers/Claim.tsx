@@ -172,23 +172,55 @@ const Claim = () => {
     return mergedData;
   }, [nftDataFetched && gameDataFetched]);
 
+  // Assuming these are imported or defined elsewhere
+  const excludedTokens = [
+    "0x04fa864a706e3403fd17ac8df307f22eafa21b778b73353abf69a622e47a2003",
+    "0x0377c2d65debb3978ea81904e7d59740da1f07412e30d01c5ded1c5d6f1ddc43",
+  ];
+
   const { freeGamesAvailable, totalFreeGamesAvailable } = useMemo(() => {
     const mergedData = mergeGameData();
     if (mergedData === null) {
       return { freeGamesAvailable: null, totalFreeGamesAvailable: null };
     }
-    const availableTokens = mergedData.filter(
-      (token: any) => token.freeGamesAvailable > 0
-    );
-    const totalAvailable = mergedData.reduce(
-      (sum, token) => sum + token.freeGamesAvailable,
+
+    const calculateTokensToClaim = (token: any) => {
+      const gamesClaimed =
+        claimedFreeGamesCountsData?.countClaimedFreeGames?.find(
+          (game: any) => game.token === indexAddress(token.token)
+        )?.count || 0;
+
+      const gamesLeft = collectionTotalGames(tbtTournament) - gamesClaimed;
+      const tokensLeft = Math.ceil(gamesLeft / GAMES_PER_TOKEN[token.token]);
+      const freeTokensAvailable = Math.ceil(
+        token.freeGamesAvailable / GAMES_PER_TOKEN[token.token]
+      );
+
+      return Math.min(tokensLeft, freeTokensAvailable);
+    };
+
+    const availableTokens = mergedData
+      .filter((token: any) => !excludedTokens.includes(token.token))
+      .map((token: any) => ({
+        ...token,
+        tokensToClaim: calculateTokensToClaim(token),
+      }))
+      .filter((token: any) => token.tokensToClaim > 0);
+
+    const totalAvailable = availableTokens.reduce(
+      (sum, token) => sum + token.tokensToClaim * GAMES_PER_TOKEN[token.token],
       0
     );
+
     return {
       freeGamesAvailable: availableTokens,
       totalFreeGamesAvailable: totalAvailable,
     };
-  }, [mergeGameData]);
+  }, [
+    mergeGameData,
+    claimedFreeGamesCountsData?.countClaimedFreeGames,
+    tbtTournament,
+  ]);
 
   useEffect(() => {
     if (account && claimedData.length > 0 && freeGamesAvailable !== null) {
@@ -312,12 +344,13 @@ const Claim = () => {
     const gamesLeft = collectionTotalGames(tbtTournament) - gamesClaimed;
     const isMintedOut = gamesLeft <= 0;
     const gamesToClaim = Math.min(gamesLeft, freeGames);
+    const excluded = excludedTokens.includes(token);
     return (
       <div
         className="flex flex-col gap-2 items-center justify-center relative"
         key={index}
       >
-        {(isMintedOut || closed) && (
+        {(isMintedOut || closed || excluded) && (
           <>
             <span className="absolute w-full h-full bg-terminal-black opacity-50 z-10" />
             <span className="absolute w-full h-full z-20">
@@ -327,7 +360,7 @@ const Claim = () => {
             </span>
           </>
         )}
-        {claimedFreeGamesCountsData && !closed ? (
+        {claimedFreeGamesCountsData && !closed && !excluded ? (
           <span
             className={`w-full absolute top-[-30px] flex flex-row border ${
               gamesLeft > (tbtTournament === "1" ? 150 : 800)
