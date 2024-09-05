@@ -123,7 +123,7 @@ const useSyscalls = () => {
           (game) => padAddress(game.token) === token
         );
 
-        return Array.from({ length: tokensToClaim }, (_, i) => {
+        return Array.from({ length: tokensToClaim }, () => {
           // Get the current index for this token, or start at 0
           const currentIndex = tokenIndexMap.get(token) || 0;
 
