@@ -231,8 +231,10 @@ const Claim = () => {
     try {
       await executeClaim(
         networkConfig[network!].gameAddress,
+        claimedFreeGamesCountsData?.countClaimedFreeGames,
         claimedGames,
-        delegateAccount
+        delegateAccount,
+        tbtTournament
       );
       setDelegateAccount("");
       setFetchingMetadata(true);
@@ -305,10 +307,11 @@ const Claim = () => {
       ? claimedFreeGamesCountsData?.countClaimedFreeGames?.find(
           (game: any) => game.token === indexAddress(token)
         ).count
-      : undefined;
-    const totalGamesLeft = collectionTotalGames(tbtTournament) - gamesClaimed;
-    const isMintedOut = totalGamesLeft <= 0;
+      : 0;
     const closed = tbtTournament === "0" && releaseTournament === "0";
+    const gamesLeft = collectionTotalGames(tbtTournament) - gamesClaimed;
+    const isMintedOut = gamesLeft <= 0;
+    const gamesToClaim = Math.min(gamesLeft, freeGames);
     return (
       <div
         className="flex flex-col gap-2 items-center justify-center relative"
@@ -328,14 +331,14 @@ const Claim = () => {
         {claimedFreeGamesCountsData && !closed ? (
           <span
             className={`w-full absolute top-[-30px] flex flex-row border ${
-              totalGamesLeft > (tbtTournament === "1" ? 150 : 800)
+              gamesLeft > (tbtTournament === "1" ? 150 : 800)
                 ? "border-terminal-green text-terminal-green"
-                : totalGamesLeft > (tbtTournament === "1" ? 30 : 160)
+                : gamesLeft > (tbtTournament === "1" ? 30 : 160)
                 ? "border-terminal-yellow text-terminal-yellow"
                 : "border-red-600 text-red-600"
             } rounded-lg justify-center uppercase`}
           >
-            {isMintedOut ? "Minted Out" : `${totalGamesLeft} Left`}
+            {isMintedOut ? "Minted Out" : `${gamesLeft} Left`}
           </span>
         ) : (
           <></>
@@ -357,8 +360,8 @@ const Claim = () => {
         </span>
         {address && freeGames > 0 && !closed && (
           <span className="w-full absolute top-24 flex flex-row bg-terminal-green text-terminal-black rounded-lg justify-center uppercase">
-            {`${freeGames}
-          Game${freeGames > 1 ? "s" : ""}
+            {`${gamesToClaim}
+          Game${gamesToClaim > 1 ? "s" : ""}
           `}
           </span>
         )}
