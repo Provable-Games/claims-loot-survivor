@@ -426,7 +426,7 @@ const Claim = () => {
                       onClick={() => {
                         clickPlay();
                         window.open(
-                          "https://sepolia.lootsurvivor.io/",
+                          "https://lootsurvivor.io/",
                           "_blank",
                           "noopener,noreferrer"
                         );
@@ -545,7 +545,7 @@ const Claim = () => {
                       onClick={() => {
                         clickPlay();
                         window.open(
-                          "https://sepolia.lootsurvivor.io/",
+                          "https://lootsurvivor.io/",
                           "_blank",
                           "noopener,noreferrer"
                         );
