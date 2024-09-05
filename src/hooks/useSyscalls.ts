@@ -140,6 +140,14 @@ const useSyscalls = () => {
         }))
       );
 
+    // Add this check
+    if (calls.length === 0) {
+      console.log("No calls to execute. Skipping transaction.");
+      setClaiming(false);
+      setSignature(null);
+      return; // Exit the function early
+    }
+
     const tx = await account.execute(calls).catch((e) => console.error(e));
 
     setPreparingClaim(false);
