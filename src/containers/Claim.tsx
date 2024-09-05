@@ -61,7 +61,7 @@ const Claim = () => {
 
   const tokenByOwnerVariables = useMemo(
     () => ({
-      ownerAddress: address ? address : "0x0",
+      ownerAddress: address ? indexAddress(address.toLowerCase()) : "0x0",
     }),
     [address]
   );
@@ -111,7 +111,7 @@ const Claim = () => {
   const fetchNftData = useCallback(async () => {
     if (connector?.id !== "cartridge") {
       const data: any = await refetchNftOwner({
-        ownerAddress: address ? address : "0x0",
+        ownerAddress: address ? indexAddress(address.toLowerCase()) : "0x0",
       });
       const tokensData = data ? data.data.tokens : [];
       setClaimedData(tokensData);

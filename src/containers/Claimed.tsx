@@ -14,7 +14,7 @@ import { useQuery } from "@apollo/client";
 import { getGamesByGameOwner } from "../hooks/graphql/queries";
 import { fetchAdventurerMetadata } from "../api/fetchMetadata";
 import TokenLoader from "../components/animations/TokenLoader";
-import { statsRevealed } from "../lib/utils";
+import { statsRevealed, indexAddress } from "../lib/utils";
 
 const Claimed = () => {
   const { address } = useAccount();
@@ -173,7 +173,7 @@ const Claimed = () => {
   ).length;
 
   const tokenByOwnerVariables = {
-    ownerAddress: address ? address : "0x0",
+    ownerAddress: address ? indexAddress(address.toLowerCase()) : "0x0",
   };
 
   const { refetch } = useQuery(getGamesByGameOwner, {
@@ -184,7 +184,7 @@ const Claimed = () => {
 
   const fetchData = useCallback(async () => {
     const data: any = await refetch({
-      ownerAddress: address ? address : "0x0",
+      ownerAddress: address ? indexAddress(address.toLowerCase()) : "0x0",
     });
     const tokensData = data ? data.data.claimedFreeGames : [];
     setFreeGamesData(tokensData);
