@@ -113,32 +113,45 @@ const useSyscalls = () => {
       "0x0377c2d65debb3978ea81904e7d59740da1f07412e30d01c5ded1c5d6f1ddc43",
     ]; // Add your excluded token addresses here
 
+    const tokenIndexMap = new Map<string, number>();
+
     const calls = gamesToClaimPerCollection
       .filter(({ token }) => !excludedTokens.includes(token))
-      .flatMap(({ token, alt, tokensToClaim }) =>
-        Array.from({ length: tokensToClaim }, () => ({
-          contractAddress: gameAddress,
-          entrypoint: "enter_launch_tournament_with_signature",
-          calldata: [
-            COLLECTION_WEAPON_MAP[getKeyByValue(COLLECTION_TOKENS_MAP, token)],
-            stringToFelt(
-              `${alt} #${
-                freeGames.find((game) => padAddress(game.token) === token)
-                  ?.tokenId
-              }`
-            ).toString(),
-            "0",
-            "1",
-            indexAddress(token),
-            freeGames
-              .find((game) => padAddress(game.token) === token)
-              ?.tokenId.toString(),
-            delegateAddress,
-            account.address,
-            signature,
-          ],
-        }))
-      );
+      .flatMap(({ token, alt, tokensToClaim }) => {
+        // Get the free games for this token
+        const tokenFreeGames = freeGames.filter(
+          (game) => padAddress(game.token) === token
+        );
+
+        return Array.from({ length: tokensToClaim }, (_, i) => {
+          // Get the current index for this token, or start at 0
+          const currentIndex = tokenIndexMap.get(token) || 0;
+
+          // Find the next available free game
+          const freeGame = tokenFreeGames[currentIndex];
+
+          // Update the index for next time
+          tokenIndexMap.set(token, currentIndex + 1);
+
+          return {
+            contractAddress: gameAddress,
+            entrypoint: "enter_launch_tournament_with_signature",
+            calldata: [
+              COLLECTION_WEAPON_MAP[
+                getKeyByValue(COLLECTION_TOKENS_MAP, token)
+              ],
+              stringToFelt(`${alt} #${freeGame?.tokenId}`).toString(),
+              "0",
+              "1",
+              indexAddress(token),
+              freeGame?.tokenId.toString(),
+              delegateAddress,
+              account.address,
+              signature,
+            ],
+          };
+        });
+      });
 
     // Add this check
     if (calls.length === 0) {
