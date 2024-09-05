@@ -68,25 +68,33 @@ const useSyscalls = () => {
     freeGames: any[],
     delegateAddress: string
   ) => {
-    const calls = freeGames.map((game) => ({
-      contractAddress: gameAddress,
-      entrypoint: "enter_launch_tournament_with_signature",
-      calldata: [
-        COLLECTION_WEAPON_MAP[
-          getKeyByValue(COLLECTION_TOKENS_MAP, padAddress(game.token))
-        ], // weapon mapped to the collection
-        stringToFelt(
-          `${getCollectionAlt(padAddress(game.token))} #${game.tokenId}`
-        ).toString(), // token identifier to be used for the adventurer name
-        "0", // always use the default renderer
-        "1", // all the free games should not reveal stats immediately
-        game.token, // collection address
-        game.tokenId.toString(), // token id
-        delegateAddress,
-        account.address,
-        signature,
-      ],
-    }));
+    const calls = freeGames
+      .filter(
+        (game) =>
+          game.token !==
+            "0x4fa864a706e3403fd17ac8df307f22eafa21b778b73353abf69a622e47a2003" &&
+          game.token !==
+            "0x377c2d65debb3978ea81904e7d59740da1f07412e30d01c5ded1c5d6f1ddc43"
+      )
+      .map((game) => ({
+        contractAddress: gameAddress,
+        entrypoint: "enter_launch_tournament_with_signature",
+        calldata: [
+          COLLECTION_WEAPON_MAP[
+            getKeyByValue(COLLECTION_TOKENS_MAP, padAddress(game.token))
+          ],
+          stringToFelt(
+            `${getCollectionAlt(padAddress(game.token))} #${game.tokenId}`
+          ).toString(),
+          "0",
+          "1",
+          game.token,
+          game.tokenId.toString(),
+          delegateAddress,
+          account.address,
+          signature,
+        ],
+      }));
 
     const tx = await account.execute(calls).catch((e) => console.error(e));
 
