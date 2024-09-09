@@ -9,6 +9,7 @@ import {
   GAMES_PER_TOKEN,
   collectionTotalGames,
   maxFreeGames,
+  excludedTokens,
 } from "../lib/constants";
 import { displayAddress, indexAddress, padAddress } from "../lib/utils";
 import useSyscalls from "../hooks/useSyscalls";
@@ -171,12 +172,6 @@ const Claim = () => {
 
     return mergedData;
   }, [nftDataFetched && gameDataFetched]);
-
-  // Assuming these are imported or defined elsewhere
-  const excludedTokens = [
-    "0x04fa864a706e3403fd17ac8df307f22eafa21b778b73353abf69a622e47a2003",
-    "0x0377c2d65debb3978ea81904e7d59740da1f07412e30d01c5ded1c5d6f1ddc43",
-  ];
 
   const { freeGamesAvailable, totalFreeGamesAvailable } = useMemo(() => {
     const mergedData = mergeGameData();
@@ -503,7 +498,7 @@ const Claim = () => {
                           </>
                         ) : (
                           <p className="uppercase text-4xl mb-5">
-                            You have Already Claimed
+                            You have no tokens to claim
                           </p>
                         )}
                       </>

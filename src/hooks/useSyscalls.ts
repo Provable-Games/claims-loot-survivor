@@ -10,6 +10,7 @@ import {
   GAMES_PER_TOKEN,
   collectionTotalGames,
   collectionsData,
+  excludedTokens,
 } from "../lib/constants";
 
 const useSyscalls = () => {
@@ -107,11 +108,6 @@ const useSyscalls = () => {
     };
 
     const gamesToClaimPerCollection = calculateGamesToClaimPerCollection();
-
-    const excludedTokens = [
-      "0x04fa864a706e3403fd17ac8df307f22eafa21b778b73353abf69a622e47a2003",
-      "0x0377c2d65debb3978ea81904e7d59740da1f07412e30d01c5ded1c5d6f1ddc43",
-    ]; // Add your excluded token addresses here
 
     const tokenIndexMap = new Map<string, number>();
 
