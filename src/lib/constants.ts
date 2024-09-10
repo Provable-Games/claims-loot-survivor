@@ -3,11 +3,7 @@ import { CollectionData } from "./types";
 
 export const COLLECTION_TOKENS_MAP = {
   Blobert: "0x00539f522b29ae9251dbf7443c7a950cf260372e69efab3710a11bf17a9599f1",
-  DucksEverywhere:
-    "0x04fa864a706e3403fd17ac8df307f22eafa21b778b73353abf69a622e47a2003",
   Everai: "0x02acee8c430f62333cf0e0e7a94b2347b5513b4c25f699461dd8d7b23c072478",
-  FocusTree:
-    "0x0377c2d65debb3978ea81904e7d59740da1f07412e30d01c5ded1c5d6f1ddc43",
   InfluenceCrew:
     "0x0241b9c4ce12c06f49fee2ec7c16337386fa5185168f538a7631aacecdf3df74",
   TheSyndicate:
@@ -19,9 +15,7 @@ export const COLLECTION_TOKENS_MAP = {
 
 export const COLLECTION_WEAPON_MAP = {
   Blobert: "76",
-  DucksEverywhere: "76",
   Everai: "12",
-  FocusTree: "16",
   InfluenceCrew: "16",
   TheSyndicate: "12",
   PixelBanners: "46",
@@ -35,19 +29,9 @@ export const collectionsData: CollectionData[] = [
     image: "Blobert.png",
   },
   {
-    token: COLLECTION_TOKENS_MAP["DucksEverywhere"],
-    alt: "Duck",
-    image: "Ducks-Everywhere.png",
-  },
-  {
     token: COLLECTION_TOKENS_MAP["Everai"],
     alt: "Everai",
     image: "Everai.png",
-  },
-  {
-    token: COLLECTION_TOKENS_MAP["FocusTree"],
-    alt: "Focus Tree",
-    image: "Focus-Tree.png",
   },
   {
     token: COLLECTION_TOKENS_MAP["InfluenceCrew"],
@@ -73,9 +57,7 @@ export const collectionsData: CollectionData[] = [
 
 export const GAMES_PER_TOKEN = {
   "0x00539f522b29ae9251dbf7443c7a950cf260372e69efab3710a11bf17a9599f1": 1,
-  "0x04fa864a706e3403fd17ac8df307f22eafa21b778b73353abf69a622e47a2003": 6,
   "0x02acee8c430f62333cf0e0e7a94b2347b5513b4c25f699461dd8d7b23c072478": 2,
-  "0x0377c2d65debb3978ea81904e7d59740da1f07412e30d01c5ded1c5d6f1ddc43": 1,
   "0x0241b9c4ce12c06f49fee2ec7c16337386fa5185168f538a7631aacecdf3df74": 1,
   "0x065a413ce0b5c169c583c7efad857913523485f1febcf5ef4f3909133f04904a": 1,
   "0x02d66679de61a5c6d57afd21e005a8c96118bd60315fd79a4521d68f5e5430d1": 1,
