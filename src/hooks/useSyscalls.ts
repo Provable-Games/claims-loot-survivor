@@ -10,6 +10,7 @@ import {
   GAMES_PER_TOKEN,
   collectionTotalGames,
   collectionsData,
+  excludedTokens,
 } from "../lib/constants";
 
 const useSyscalls = () => {
@@ -110,8 +111,9 @@ const useSyscalls = () => {
 
     const tokenIndexMap = new Map<string, number>();
 
-    const calls = gamesToClaimPerCollection.flatMap(
-      ({ token, alt, tokensToClaim }) => {
+    const calls = gamesToClaimPerCollection
+      .filter(({ token }) => !excludedTokens.includes(token))
+      .flatMap(({ token, alt, tokensToClaim }) => {
         // Get the free games for this token
         const tokenFreeGames = freeGames.filter(
           (game) => padAddress(game.token) === token
@@ -145,8 +147,7 @@ const useSyscalls = () => {
             ],
           };
         });
-      }
-    );
+      });
 
     // Add this check
     if (calls.length === 0) {

@@ -107,3 +107,7 @@ export const maxFreeGames = (tournament: string) => {
     return 12800;
   }
 };
+
+export const excludedTokens = [
+  "0x04fa864a706e3403fd17ac8df307f22eafa21b778b73353abf69a622e47a2003",
+]; // Add your excluded token addresses here

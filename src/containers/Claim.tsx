@@ -9,6 +9,7 @@ import {
   GAMES_PER_TOKEN,
   collectionTotalGames,
   maxFreeGames,
+  excludedTokens,
 } from "../lib/constants";
 import { displayAddress, indexAddress, padAddress } from "../lib/utils";
 import useSyscalls from "../hooks/useSyscalls";
@@ -194,6 +195,7 @@ const Claim = () => {
     };
 
     const availableTokens = mergedData
+      .filter((token: any) => !excludedTokens.includes(token.token))
       .map((token: any) => ({
         ...token,
         tokensToClaim: calculateTokensToClaim(token),
