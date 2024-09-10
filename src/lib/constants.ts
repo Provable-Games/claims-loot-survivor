@@ -4,7 +4,7 @@ import { CollectionData } from "./types";
 export const COLLECTION_TOKENS_MAP = {
   Blobert: "0x00539f522b29ae9251dbf7443c7a950cf260372e69efab3710a11bf17a9599f1",
   DucksEverywhere:
-    "0x04fa864a706e3403fd17ac8df307f22eafa21b778b73353abf69a622e47a2003",
+    "0x058949fa2955b10b3a82521934e8b0505dc0b7ba929c3049622ae91d2c52e194",
   Everai: "0x02acee8c430f62333cf0e0e7a94b2347b5513b4c25f699461dd8d7b23c072478",
   FocusTree:
     "0x0377c2d65debb3978ea81904e7d59740da1f07412e30d01c5ded1c5d6f1ddc43",
@@ -73,7 +73,7 @@ export const collectionsData: CollectionData[] = [
 
 export const GAMES_PER_TOKEN = {
   "0x00539f522b29ae9251dbf7443c7a950cf260372e69efab3710a11bf17a9599f1": 1,
-  "0x04fa864a706e3403fd17ac8df307f22eafa21b778b73353abf69a622e47a2003": 6,
+  "0x058949fa2955b10b3a82521934e8b0505dc0b7ba929c3049622ae91d2c52e194": 6,
   "0x02acee8c430f62333cf0e0e7a94b2347b5513b4c25f699461dd8d7b23c072478": 2,
   "0x0377c2d65debb3978ea81904e7d59740da1f07412e30d01c5ded1c5d6f1ddc43": 1,
   "0x0241b9c4ce12c06f49fee2ec7c16337386fa5185168f538a7631aacecdf3df74": 1,
@@ -107,8 +107,3 @@ export const maxFreeGames = (tournament: string) => {
     return 12800;
   }
 };
-
-export const excludedTokens = [
-  "0x04fa864a706e3403fd17ac8df307f22eafa21b778b73353abf69a622e47a2003",
-  "0x0377c2d65debb3978ea81904e7d59740da1f07412e30d01c5ded1c5d6f1ddc43",
-]; // Add your excluded token addresses here

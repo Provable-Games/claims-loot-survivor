@@ -10,7 +10,6 @@ import {
   GAMES_PER_TOKEN,
   collectionTotalGames,
   collectionsData,
-  excludedTokens,
 } from "../lib/constants";
 
 const useSyscalls = () => {
@@ -111,9 +110,8 @@ const useSyscalls = () => {
 
     const tokenIndexMap = new Map<string, number>();
 
-    const calls = gamesToClaimPerCollection
-      .filter(({ token }) => !excludedTokens.includes(token))
-      .flatMap(({ token, alt, tokensToClaim }) => {
+    const calls = gamesToClaimPerCollection.flatMap(
+      ({ token, alt, tokensToClaim }) => {
         // Get the free games for this token
         const tokenFreeGames = freeGames.filter(
           (game) => padAddress(game.token) === token
@@ -147,7 +145,8 @@ const useSyscalls = () => {
             ],
           };
         });
-      });
+      }
+    );
 
     // Add this check
     if (calls.length === 0) {
@@ -157,14 +156,24 @@ const useSyscalls = () => {
       return; // Exit the function early
     }
 
-    const tx = await account.execute(calls).catch((e) => console.error(e));
+    const batchSize = 20;
+    let lastTxHash: string | undefined;
+
+    for (let i = 0; i < calls.length; i += batchSize) {
+      const batch = calls.slice(i, i + batchSize);
+
+      const tx = await account.execute(batch).catch((e) => console.error(e));
+      lastTxHash = (tx as any)?.transaction_hash;
+
+      if (i + batchSize < calls.length) {
+        await new Promise((resolve) => setTimeout(resolve, 2000)); // 1 second delay
+      }
+    }
 
     setPreparingClaim(false);
     setClaiming(true);
 
-    const receipt = await provider?.waitForTransaction(
-      (tx as any)?.transaction_hash
-    );
+    const receipt = await provider?.waitForTransaction(lastTxHash);
 
     const claimedFreeGameEvents = await parseEvents(
       receipt as InvokeTransactionReceiptResponse,
@@ -234,7 +243,7 @@ const useSyscalls = () => {
       lastTxHash = (tx as any)?.transaction_hash;
 
       if (i + batchSize < unrevealedGames.length) {
-        await new Promise((resolve) => setTimeout(resolve, 1000)); // 1 second delay
+        await new Promise((resolve) => setTimeout(resolve, 2000)); // 2 second delay
       }
     }
 

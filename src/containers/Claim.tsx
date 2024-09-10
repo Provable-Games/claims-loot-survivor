@@ -9,7 +9,6 @@ import {
   GAMES_PER_TOKEN,
   collectionTotalGames,
   maxFreeGames,
-  excludedTokens,
 } from "../lib/constants";
 import { displayAddress, indexAddress, padAddress } from "../lib/utils";
 import useSyscalls from "../hooks/useSyscalls";
@@ -195,7 +194,6 @@ const Claim = () => {
     };
 
     const availableTokens = mergedData
-      .filter((token: any) => !excludedTokens.includes(token.token))
       .map((token: any) => ({
         ...token,
         tokensToClaim: calculateTokensToClaim(token),
@@ -339,13 +337,12 @@ const Claim = () => {
     const gamesLeft = collectionTotalGames(tbtTournament) - gamesClaimed;
     const isMintedOut = gamesLeft <= 0;
     const gamesToClaim = Math.min(gamesLeft, freeGames);
-    const excluded = excludedTokens.includes(token);
     return (
       <div
         className="flex flex-col gap-2 items-center justify-center relative"
         key={index}
       >
-        {(isMintedOut || closed || excluded) && (
+        {(isMintedOut || closed) && (
           <>
             <span className="absolute w-full h-full bg-terminal-black opacity-50 z-10" />
             <span className="absolute w-full h-full z-20">
@@ -355,7 +352,7 @@ const Claim = () => {
             </span>
           </>
         )}
-        {claimedFreeGamesCountsData && !closed && !excluded ? (
+        {claimedFreeGamesCountsData && !closed ? (
           <span
             className={`w-full absolute top-[-30px] flex flex-row border ${
               gamesLeft > (tbtTournament === "1" ? 150 : 800)
