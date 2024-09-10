@@ -136,7 +136,12 @@ const useSyscalls = () => {
               COLLECTION_WEAPON_MAP[
                 getKeyByValue(COLLECTION_TOKENS_MAP, token)
               ],
-              stringToFelt(`${alt} #${freeGame?.tokenId}`).toString(),
+              token ===
+              "0x0377c2d65debb3978ea81904e7d59740da1f07412e30d01c5ded1c5d6f1ddc43"
+                ? stringToFelt(
+                    `${alt} #${freeGame?.tokenId.toString().slice(0, 5)}`
+                  ).toString()
+                : stringToFelt(`${alt} #${freeGame?.tokenId}`).toString(),
               "0",
               "1",
               indexAddress(token),
