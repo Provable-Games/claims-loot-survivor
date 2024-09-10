@@ -14,8 +14,8 @@ export const cartridgeConnector = (
   ethAddress: string,
   rpcUrl: string
 ) =>
-  new CartridgeConnector(
-    [
+  new CartridgeConnector({
+    policies: [
       {
         target: gameAddress,
         method: "new_game",
@@ -65,11 +65,9 @@ export const cartridgeConnector = (
         method: "approve",
       },
     ],
-    {
-      paymaster: {
-        caller: shortString.encodeShortString("ANY_CALLER"),
-      },
-      rpc: rpcUrl,
-      theme: "loot-survivor",
-    }
-  ) as never as Connector;
+    paymaster: {
+      caller: shortString.encodeShortString("ANY_CALLER"),
+    },
+    rpc: rpcUrl,
+    theme: "loot-survivor",
+  }) as never as Connector;
