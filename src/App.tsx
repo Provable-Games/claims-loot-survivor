@@ -22,7 +22,7 @@ const App = () => {
   const { connector } = useConnect();
 
   useEffect(() => {
-    if (connector?.id.includes("cartridge")) {
+    if (connector?.id.includes("controller")) {
       const init = async () => {
         const username = await (
           connector as unknown as CartridgeConnector

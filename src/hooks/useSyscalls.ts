@@ -32,7 +32,7 @@ const useSyscalls = () => {
       return;
     }
 
-    if (connector?.id !== "cartridge") {
+    if (connector?.id !== "controller") {
       return;
     }
 
@@ -200,7 +200,7 @@ const useSyscalls = () => {
       return;
     }
 
-    if (connector?.id !== "cartridge") {
+    if (connector?.id !== "controller") {
       return;
     }
 
@@ -225,7 +225,7 @@ const useSyscalls = () => {
       return;
     }
 
-    if (connector?.id !== "cartridge") {
+    if (connector?.id !== "controller") {
       return;
     }
 

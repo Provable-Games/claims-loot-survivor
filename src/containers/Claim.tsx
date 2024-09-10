@@ -110,7 +110,7 @@ const Claim = () => {
   const mintedOut = totalFreeGames >= maxFreeGames(tbtTournament);
 
   const fetchNftData = useCallback(async () => {
-    if (connector?.id !== "cartridge") {
+    if (connector?.id !== "controller") {
       const data: any = await refetchNftOwner({
         ownerAddress: address ? indexAddress(address.toLowerCase()) : "0x0",
       });
@@ -122,7 +122,7 @@ const Claim = () => {
   }, [address, connector]);
 
   const fetchGameData = useCallback(async () => {
-    if (connector?.id !== "cartridge") {
+    if (connector?.id !== "controller") {
       const data: any = await refetchGameOwner({
         hashList: hashList,
       });
@@ -186,9 +186,11 @@ const Claim = () => {
         )?.count || 0;
 
       const gamesLeft = collectionTotalGames(tbtTournament) - gamesClaimed;
-      const tokensLeft = Math.ceil(gamesLeft / GAMES_PER_TOKEN[token.token]);
+      const tokensLeft = Math.ceil(
+        gamesLeft / GAMES_PER_TOKEN[padAddress(token.token)]
+      );
       const freeTokensAvailable = Math.ceil(
-        token.freeGamesAvailable / GAMES_PER_TOKEN[token.token]
+        token.freeGamesAvailable / GAMES_PER_TOKEN[padAddress(token.token)]
       );
 
       return Math.min(tokensLeft, freeTokensAvailable);
@@ -203,7 +205,8 @@ const Claim = () => {
       .filter((token: any) => token.tokensToClaim > 0);
 
     const totalAvailable = availableTokens.reduce(
-      (sum, token) => sum + token.tokensToClaim * GAMES_PER_TOKEN[token.token],
+      (sum, token) =>
+        sum + token.tokensToClaim * GAMES_PER_TOKEN[padAddress(token.token)],
       0
     );
 
@@ -234,7 +237,7 @@ const Claim = () => {
     setDelegateAccount(address!);
     setClaimedGames(freeGamesAvailable);
     const cartridgeConnector = connectors.find(
-      (connector) => connector.id === "cartridge"
+      (connector) => connector.id === "controller"
     );
     if (cartridgeConnector) {
       connect({ connector: cartridgeConnector });
@@ -247,7 +250,7 @@ const Claim = () => {
       controllerAccount
     );
     const cartridgeConnector = connectors.find(
-      (connector) => connector.id === "cartridge"
+      (connector) => connector.id === "controller"
     );
     if (cartridgeConnector) {
       connect({ connector: cartridgeConnector });
@@ -283,7 +286,7 @@ const Claim = () => {
   }, [controllerAccount]);
 
   useEffect(() => {
-    if (connector?.id === "cartridge" && account) {
+    if (connector?.id === "controller" && account) {
       if (selectSkip) {
         setClaimed(true);
       } else {
@@ -301,7 +304,7 @@ const Claim = () => {
   }, [connector, account, signature]);
 
   useEffect(() => {
-    if (connector?.id !== "cartridge" && account) {
+    if (connector?.id !== "controller" && account) {
       if (controllerAccount && !claimed) {
         const timer = setTimeout(() => {
           executeSignatureProcess();

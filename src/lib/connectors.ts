@@ -3,10 +3,10 @@ import CartridgeConnector from "@cartridge/connector";
 import { shortString } from "starknet";
 
 export const getWalletConnectors = (connectors: Connector[]) =>
-  connectors.filter((connector) => connector.id !== "cartridge");
+  connectors.filter((connector) => connector.id !== "controller");
 
 export const getCartridgeConnector = (connectors: Connector[]) =>
-  connectors.find((connector) => connector.id === "cartridge");
+  connectors.find((connector) => connector.id === "controller");
 
 export const cartridgeConnector = (
   gameAddress: string,
