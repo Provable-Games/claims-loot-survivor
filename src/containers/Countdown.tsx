@@ -31,8 +31,7 @@ const Countdown = () => {
     "Sharpening critical hit calculations...",
   ];
 
-  // Set your target date here
-  const targetDate = Date.UTC(2024, 8, 4, 22, 10, 41);
+  const targetDate = Date.UTC(2024, 8, 10, 18, 33, 50);
 
   useEffect(() => {
     const interval = setInterval(() => {

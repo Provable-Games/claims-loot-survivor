@@ -9,7 +9,6 @@ import CartridgeConnector from "@cartridge/connector";
 import Countdown from "./containers/Countdown";
 import { constants } from "starknet";
 import NetworkSwitchError from "./containers/NetworkSwitchError";
-import ComingSoon from "./containers/ComingSoon";
 
 const App = () => {
   const { claimed, claiming, preparingClaim, preparingReveal, setUsername } =
@@ -36,7 +35,7 @@ const App = () => {
 
   useEffect(() => {
     const now = new Date().getTime();
-    const targetDate = Date.UTC(2024, 8, 4, 22, 10, 41);
+    const targetDate = Date.UTC(2024, 8, 10, 18, 33, 50);
     const difference = targetDate - now;
     if (difference > 0) {
       setCountdown(true);
@@ -77,7 +76,6 @@ const App = () => {
       {claiming && <Claiming />}
       {countdown && <Countdown />}
       <NetworkSwitchError network={network} isWrongNetwork={isWrongNetwork} />
-      <ComingSoon />
     </div>
   );
 };
