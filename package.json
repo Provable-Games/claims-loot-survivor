@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.11.4",
-    "@cartridge/connector": "^0.3.41",
+    "@cartridge/connector": "^0.3.44",
     "@cartridge/ui-next": "^0.3.41",
     "@fontsource/vt323": "^5.0.13",
     "buffer": "^6.0.3",
