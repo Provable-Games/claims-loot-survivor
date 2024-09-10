@@ -9,6 +9,7 @@ import CartridgeConnector from "@cartridge/connector";
 import Countdown from "./containers/Countdown";
 import { constants } from "starknet";
 import NetworkSwitchError from "./containers/NetworkSwitchError";
+import ComingSoon from "./containers/ComingSoon";
 
 const App = () => {
   const { claimed, claiming, preparingClaim, preparingReveal, setUsername } =
@@ -76,6 +77,7 @@ const App = () => {
       {claiming && <Claiming />}
       {countdown && <Countdown />}
       <NetworkSwitchError network={network} isWrongNetwork={isWrongNetwork} />
+      <ComingSoon />
     </div>
   );
 };

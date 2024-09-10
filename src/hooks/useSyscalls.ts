@@ -219,15 +219,28 @@ const useSyscalls = () => {
       return;
     }
 
-    const calls = unrevealedGames.map((game) => ({
-      contractAddress: gameAddress,
-      entrypoint: "attack", // slaying the first beast acts as the prompt to reveal stats
-      calldata: [game.adventurerId.toString(), "1"],
-    }));
+    const batchSize = 20;
+    let lastTxHash: string | undefined;
 
-    const tx = await account.execute(calls).catch((e) => console.error(e));
+    for (let i = 0; i < unrevealedGames.length; i += batchSize) {
+      const batch = unrevealedGames.slice(i, i + batchSize);
+      const calls = batch.map((game) => ({
+        contractAddress: gameAddress,
+        entrypoint: "attack", // slaying the first beast acts as the prompt to reveal stats
+        calldata: [game.adventurerId.toString(), "1"],
+      }));
 
-    await provider?.waitForTransaction((tx as any)?.transaction_hash);
+      const tx = await account.execute(calls).catch((e) => console.error(e));
+      lastTxHash = (tx as any)?.transaction_hash;
+
+      if (i + batchSize < unrevealedGames.length) {
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // 1 second delay
+      }
+    }
+
+    if (lastTxHash) {
+      await provider?.waitForTransaction(lastTxHash);
+    }
   };
 
   return {
